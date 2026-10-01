@@ -65,7 +65,7 @@ Responsabilidades em grupo: navegação e disfarce de ponta a ponta, organizaç�
 ##  Data Science
 
 - **Objetivo do modelo:** Prever ou classificar o nível de risco de violência (ou necessidade de apoio) com base nos fatores informados na autoavaliação/questionário da usuária, ajudando a direcionar orientações e canais de ajuda
-- **Base de dados (pública e legítima):** Em definição, a base está em fase de seleção com foco em fontes públicas e oficiais, garantindo a ausência de dados reais
+- **Base de dados (pública e legítima):** Foi selecionada a base pública e oficial do Ligue 180 / Ouvidoria Nacional de Direitos Humanos (ONDH), extraída do Portal Brasileiro de Dados Abertos (dados.gov.br). Trata-se de uma base totalmente anônima, agregada e de acesso público, estando em conformidade com a LGPD e adequada para análises estatísticas e exploratórias do projeto.
 - **Etapas:** EDA, tratamento, modelo, métricas e validação cruzada
 - **Integração no app:** O modelo treinado será exposto via API (Backend). O aplicativo Mobile consumirá essa API enviando as respostas do questionário de autoavaliação e recebendo o resultado (retorno) do nível de risco para exibir na tela
 
