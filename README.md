@@ -41,7 +41,7 @@ Cada integrante é responsável por 1 CRUD completo (modelagem, rotas da API, te
 |---|---|---|
 | Ana Julia Prado |  Perfil da Usuária | [EDA / qualidade / modelagem / avaliação] |
 | Ana Julia Prado | Diário de Ocorrências |  |
-| Ana Clara Mantella | Rede de Apoio |  |
+| Ana Clara Mantella | Rede de Apoio |[Problema / Limpeza de Dados ]  |
 | Ana Julia Fernandes | Autoavaliação |  |
 
 Responsabilidades em grupo: navegação e disfarce de ponta a ponta, organização e qualidade do código, integração do modelo no app.
