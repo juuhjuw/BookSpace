@@ -3,7 +3,7 @@
 Projeto Integrador · 4º Semestre ADS · 2026 · Desenvolvimento Móvel & Data Science
 Universidade Positivo · Prof. Alex Junior Nunes
 
-> ⚠️ **Protótipo acadêmico.** Este app é fictício e NÃO substitui atendimento policial, jurídico, psicológico ou de saúde. Todos os dados usados nos testes são fictícios.
+> ⚠️ **Protótipo acadêmico.** Este app é fictício e não substitui atendimento policial, jurídico, psicológico ou de saúde. Todos os dados usados nos testes são fictícios.
 
 ##  Canais de ajuda
 
@@ -31,7 +31,7 @@ O BookSpace é um aplicativo que, à primeira vista, funciona como um app comum 
 |---|---|---|
 | Ana Julia Prado | juuhjuw | Mobile e Data Science |
 | Ana Clara Mantella | anaclaramantellaa | Mobile e Data Science |
-| Ana Julia Fernandes |  | Mobile e Data Science |
+| Ana Julia Fernandes | AnaJuliaSFernandes | Mobile e Data Science |
 
 ##  Matriz de papéis
 
@@ -39,10 +39,10 @@ Cada integrante é responsável por 1 CRUD completo (modelagem, rotas da API, te
 
 | Integrante | CRUD (Mobile + API) | Etapa do pipeline de Data Science |
 |---|---|---|
-| Ana Julia Prado |  Perfil da Usuária | [EDA / qualidade / modelagem / avaliação] |
-| Ana Julia Prado | Diário de Ocorrências |  |
-| Ana Clara Mantella | Rede de Apoio |[Problema / Limpeza de Dados ]  |
-| Ana Julia Fernandes | Autoavaliação |  |
+| Ana Julia Prado |  Perfil da Usuária | EDA & Eng. Atributos |
+| Ana Julia Prado | Diário de Ocorrências | EDA & Eng. Atributos  |
+| Ana Clara Mantella | Rede de Apoio |Qualidade (coleta e limpeza dos dados) |
+| Ana Julia Fernandes | Autoavaliação | Modelagem e avaliação |
 
 Responsabilidades em grupo: navegação e disfarce de ponta a ponta, organização e qualidade do código, integração do modelo no app.
 
@@ -64,10 +64,10 @@ Responsabilidades em grupo: navegação e disfarce de ponta a ponta, organizaç�
 
 ##  Data Science
 
-- **Objetivo do modelo:** 
-- **Base de dados (pública e legítima):** 
+- **Objetivo do modelo:** Prever ou classificar o nível de risco de violência (ou necessidade de apoio) com base nos fatores informados na autoavaliação/questionário da usuária, ajudando a direcionar orientações e canais de ajuda
+- **Base de dados (pública e legítima):** Em definição, a base está em fase de seleção com foco em fontes públicas e oficiais, garantindo a ausência de dados reais
 - **Etapas:** EDA, tratamento, modelo, métricas e validação cruzada
-- **Integração no app:** 
+- **Integração no app:** O modelo treinado será exposto via API (Backend). O aplicativo Mobile consumirá essa API enviando as respostas do questionário de autoavaliação e recebendo o resultado (retorno) do nível de risco para exibir na tela
 
 ##  Estrutura do repositório
 
@@ -81,7 +81,7 @@ USO_IA.md
 
 ##  Como rodar
 
-[Preencher: instalar dependências, subir a API, abrir o app com Expo.]
+Preencher: instalar dependências, subir a API, abrir o app com Expo
 
 ##  Gestão do projeto
 
