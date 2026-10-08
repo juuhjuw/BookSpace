@@ -1,0 +1,28 @@
+# Node / Expo
+node_modules/
+.expo/
+dist/
+web-build/
+.claude/
+# Build do Android temporário
+android/.gradle/
+android/app/build/
+android/captures/
+# Build do iOS temporário
+ios/Pods/
+ios/build/
+ios/DerivedData/
+# Variáveis /nunca subir senhas
+.env
+.env.local
+# Python
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+# Dados brutos 
+data/raw/*.csv
+# Sistema
+.DS_Store
+Thumbs.db
+!.vscode/settings.json
+.idea/
