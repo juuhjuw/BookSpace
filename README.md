@@ -32,6 +32,7 @@ O BookSpace é um aplicativo que, à primeira vista, funciona como um app comum 
 | Ana Julia Prado | juuhjuw | Mobile e Data Science |
 | Ana Clara Mantella | anaclaramantellaa | Mobile e Data Science |
 | Ana Julia Fernandes | AnaJuliaSFernandes | Mobile e Data Science |
+| Guilherme Dorigon | gDorigon | Mobile e Data Science |
 
 ##  Matriz de papéis
 
@@ -39,9 +40,9 @@ Cada integrante é responsável por 1 CRUD completo (modelagem, rotas da API, te
 
 | Integrante | CRUD (Mobile + API) | Etapa do pipeline de Data Science |
 |---|---|---|
-| Ana Julia Prado |  Perfil da Usuária | EDA & Eng. Atributos |
+| Ana Clara Mantella |  Perfil da Usuária | EDA & Eng. Atributos |
 | Ana Julia Prado | Diário de Ocorrências | EDA & Eng. Atributos  |
-| Ana Clara Mantella | Rede de Apoio |Qualidade (coleta e limpeza dos dados) |
+| Guilherme Dorigon | Rede de Apoio |Qualidade (coleta e limpeza dos dados) |
 | Ana Julia Fernandes | Autoavaliação | Modelagem e avaliação |
 
 Responsabilidades em grupo: navegação e disfarce de ponta a ponta, organização e qualidade do código, integração do modelo no app.
