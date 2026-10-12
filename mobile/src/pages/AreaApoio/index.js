@@ -11,19 +11,7 @@ import {
 // tira o conteudo de tras do dinamique island
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-
-// Padronizacao de cor
-const CORES = {
-  fundo: "#FBF8F4",
-  branco: "#FFFFFF",
-  roxo: "#552066",
-  roxoClaro: "#F1E6F4",
-  laranja: "#F0A82F",
-  texto: "#29232A",
-  textoSecundario: "#746D78",
-  borda: "#E4DDE6",
-  itemDesabilitado: "#AFA8B2",
-};
+import { CORES } from "../../theme";
 
 // Itens da lista da rede de apoio
 const OPCOES = [
