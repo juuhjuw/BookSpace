@@ -39,7 +39,7 @@ Cada integrante é responsável por 1 CRUD completo (modelagem, rotas da API, te
 
 | Integrante             | CRUD (Mobile + API)   | Etapa do pipeline de Data Science      |
 | ---------------------- | --------------------- | -------------------------------------- |
-| Ana Julia Prado        | Perfil da Usuária     | EDA & Eng. Atributos                   |
+| Ana Clara Mantella     | Perfil da Usuária     | EDA & Eng. Atributos                   |
 | Ana Julia Prado        | Diário de Ocorrências | EDA & Eng. Atributos                   |
 | Guilherme Dorigon Bovo | Rede de Apoio         | Qualidade (coleta e limpeza dos dados) |
 | Ana Julia Fernandes    | Autoavaliação         | Modelagem e avaliação                  |
