@@ -34,6 +34,7 @@ const OPCOES = [
     id: "perfil",
     titulo: "Perfil e PIN",
     icone: "account-cog-outline",
+    rota: "Perfil",
   },
 ];
 
@@ -71,20 +72,21 @@ function CartaoEmergencia({
 }
 
 // Componente responsável por exibir cada opção do menu.
-function ItemMenu({ titulo, icone }) {
+function ItemMenu({ titulo, icone, onPress }) {
   return (
-    <View
+    <Pressable
       accessible
       accessibilityRole="text"
       accessibilityLabel={titulo}
-      style={styles.itemMenu}
+      onPress={onPress}
+      style={({ pressed }) => [styles.itemMenu, pressed && styles.pressionado]}
     >
       {/* Ícone relacionado à opção apresentada. */}
       <MaterialCommunityIcons name={icone} size={18} color={CORES.branco} />
 
       {/* Nome da opção do menu. */}
       <Text style={styles.textoItemMenu}>{titulo}</Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -205,6 +207,9 @@ export default function AreaApoio({ navigation }) {
               key={opcao.id}
               titulo={opcao.titulo}
               icone={opcao.icone}
+              onPress={
+                opcao.rota ? () => navigation.navigate(opcao.rota) : undefined
+              }
             />
           ))}
         </View>

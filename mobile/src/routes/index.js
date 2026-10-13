@@ -9,7 +9,7 @@ const Stack = createNativeStackNavigator();
 export default function Routes() {
   return (
     <Stack.Navigator
-      initialRouteName="AreaApoio"
+      initialRouteName="Perfil"
       screenOptions={{
         headerShown: false,
         animation: "slide_from_right",
