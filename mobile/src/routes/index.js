@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import AreaApoio from "../pages/AreaApoio";
+import Perfil from "../pages/Perfil/Perfil";
 import { CORES } from "../theme";
 
 const Stack = createNativeStackNavigator();
@@ -18,6 +19,7 @@ export default function Routes() {
       }}
     >
       <Stack.Screen name="AreaApoio" component={AreaApoio} />
+      <Stack.Screen name="Perfil" component={Perfil} />
     </Stack.Navigator>
   );
 }
