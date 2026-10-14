@@ -1,18 +1,25 @@
-import React from 'react';
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
-import Perfil from "../pages/Perfil"
+import AreaApoio from "../pages/AreaApoio";
+import Perfil from "../pages/Perfil/Perfil";
+import { CORES } from "../theme";
 
 const Stack = createNativeStackNavigator();
 
-export default function Rotas(){
-    return(
-        <Stack.Navigator>
-            <Stack.Screen
-                 name="Perfil" 
-                component={Perfil} 
-            />
-        </Stack.Navigator>
-    )
+export default function Routes() {
+  return (
+    <Stack.Navigator
+      initialRouteName="Perfil"
+      screenOptions={{
+        headerShown: false,
+        animation: "slide_from_right",
+        contentStyle: {
+          backgroundColor: CORES.fundo,
+        },
+      }}
+    >
+      <Stack.Screen name="AreaApoio" component={AreaApoio} />
+      <Stack.Screen name="Perfil" component={Perfil} />
+    </Stack.Navigator>
+  );
 }

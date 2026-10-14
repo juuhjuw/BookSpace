@@ -1,0 +1,1 @@
+export { CORES } from "./colors";
