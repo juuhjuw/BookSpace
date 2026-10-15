@@ -21,10 +21,10 @@ export const estilo = StyleSheet.create({
     fontWeight: 'bold', 
     color: CORES.roxo 
   },
-  subtituloCabecalho: { 
-    fontSize: 12, 
+  subtitulo: { 
+    fontSize: 13, 
     color: CORES.textoSecundario, 
-    marginTop: 4,
+    padding: 13,
     maxWidth: '220' 
   },
   botaoMarcaPagina: { 
