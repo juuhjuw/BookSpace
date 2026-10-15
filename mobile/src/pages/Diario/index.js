@@ -1,8 +1,9 @@
 import React, {useState} from 'react';
 
-import{  Text, View, FlatList, TouchableOpacity, TextInput, ScrollView } from 'react-native'
+import{  Text, View, Alert, TouchableOpacity, TextInput, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Swipeable } from 'react-native-gesture-handler';
 import { CORES } from "../../theme";
 import { DADOS_DIARIO } from './dados';
 import { CATEGORIAS_FIXAS } from './dados';
@@ -50,9 +51,49 @@ export default function TelaDiario ({ navigation }) {
     setDescricao(item.descricao);
   };
 
+  //alerta de segurança
+  const confirmarExclusao = (id) => {
+    Alert.alert(
+      "Excluir Ocorrência",
+      "Tem certeza de que deseja excluir este item? Esta ação não pode ser desfeita.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Excluir", 
+          style: "destructive", 
+          onPress: () => excluirRelato(id) 
+        }
+      ]
+    );
+  };
+
   // Exclui o relato pelo id
   const excluirRelato = (id) => {
     setRelatos(relatos.filter((item) => item.id !== id));
+  };
+
+  const renderLeftActions = (item) => {
+    return (
+      <TouchableOpacity 
+        style={[estilo.botaoEditar, { backgroundColor: '#b7f1cf' }]} 
+        onPress={() => iniciarEdicao(item)}
+      >
+        <MaterialCommunityIcons name="pencil-outline" size={19} color="#07ad4d" />
+        <Text style={estilo.textoEditar}>Editar</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderRightActions = (item) => {
+    return (
+      <TouchableOpacity 
+        style={[estilo.botaoExcluir, { backgroundColor: '#ffcac5' }]} 
+        onPress={() => confirmarExclusao(item.id)}
+      >
+        <MaterialCommunityIcons  name="trash-can-outline" size={19} color={CORES.vermelho} />
+        <Text style={estilo.textoAcaoSwipe}>Excluir</Text>
+      </TouchableOpacity>
+    );
   };
 
 return (
@@ -72,7 +113,7 @@ return (
         </TouchableOpacity>
              </View>
 
-                {/* Bloco de Novo Registro */}
+        {/* Bloco de Novo Registro */}
         <View style={estilo.cardFormulario}>
           <Text style={estilo.formTitulo}>{idEditando !== null ? 'Editar registro' : 'Novo registro'}</Text>
           
@@ -101,6 +142,7 @@ return (
             })}
           </View>
 
+          {/* Campo de Descrição */}
           <TextInput
             style={[estilo.input, estilo.textArea]}
             placeholder="O que aconteceu?"
@@ -126,23 +168,29 @@ return (
 
         {/* Lista de Registros Salvos */}
         {relatos.map((item) => (
-          <View key={item.id} style={estilo.card}>
+          <Swipeable
+            key={item.id}
+            renderLeftActions ={() => renderLeftActions(item)}
+            renderRightActions={() => renderRightActions(item)}
+            onSwipeableOpen={(direction) => {
+              if (direction === 'left') {
+                // Arrastou para a direita -> Editar
+                iniciarEdicao(item);
+              } else if (direction === 'right') {
+                // Arrastou para a esquerda -> Excluir
+                confirmarExclusao(item.id);
+              }
+            }}
+          >
+          <View style={estilo.card}>
             <View style={estilo.cardHeaderInfo}>
               <Text style={estilo.cardTitulo}>{item.categoria}</Text>
               <Text style={estilo.cardData}>{item.data_ocorrencia}</Text>
             </View>
 
             <Text style={estilo.cardDescricao}>{item.descricao}</Text>
-            
-            <View style={estilo.cardBotoes}>
-              <TouchableOpacity style={estilo.botaoEditar} onPress={() => iniciarEdicao(item)}>
-                 <Text style={estilo.textoEditar}>Editar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={estilo.botaoExcluir} onPress={() => excluirRelato(item.id)}>
-                 <Text style={estilo.textoExcluir}>Excluir</Text>
-              </TouchableOpacity>
-            </View>
           </View>
+          </Swipeable>
         ))}
 
 

@@ -21,24 +21,22 @@ export const estilo = StyleSheet.create({
     fontWeight: 'bold', 
     color: CORES.roxo 
   },
-  subtituloCabecalho: { 
-    fontSize: 13, 
+  subtitulo: { 
+    fontSize: 15, 
     color: CORES.textoSecundario,
-    marginTop: 2
+    padding: 8,
+    marginBottom: 3,
   },
  botaoMarcaPagina: { 
     position: 'absolute',
-    top: 0,                   // Toca exatamente na borda superior da tela
-    right: 13,                // Distância da borda direita
-    width: 48,                // Mais larga
-    height: 70,               // Bem comprida para baixo
-    backgroundColor: '#F5A623', // Amarelo sólido
-    borderBottomLeftRadius: 2,  // Cantos inferiores sutilmente arredondados
+    top: 0,                   
+    right: 13,                
+    width: 48,                
+    height: 70,               
+    backgroundColor: '#F5A623', 
+    borderBottomLeftRadius: 2,  
     borderBottomRightRadius: 2,
     zIndex: 20,               // Garante que fica por cima de tudo
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 2,
-    elevation: 4,
   },
 corteMarcaPagina: {
    position: 'absolute',
@@ -93,10 +91,12 @@ corteMarcaPagina: {
     gap: 10 
   },
   botaoEditar: { 
-    paddingVertical: 6, 
-    paddingHorizontal: 16, 
-    borderRadius: 8, 
-    borderWidth: 1, 
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
     borderColor: CORES.borda,
     backgroundColor: CORES.branco
   },
@@ -105,16 +105,19 @@ corteMarcaPagina: {
     fontSize: 12, 
     fontWeight: '600' 
   },
-  botaoExcluir: { 
-    backgroundColor: CORES.vermelho || '#B22222', 
-    paddingVertical: 6, 
-    paddingHorizontal: 16, 
-    borderRadius: 8 
+  botaoExcluir: {
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    backgroundColor: CORES.vermelho,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
   },
-  textoExcluir: { 
-    color: CORES.branco, 
-    fontSize: 12, 
-    fontWeight: '600' 
+  textoExcluir: {
+    color: CORES.vermelho,
+    fontSize: 12,
+    fontWeight: "600",
   },
   cardFormulario: {
     backgroundColor: CORES.branco,

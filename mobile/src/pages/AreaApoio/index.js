@@ -19,6 +19,7 @@ const OPCOES = [
     id: "diario",
     titulo: "Diário de Ocorrências",
     icone: "book-open-page-variant-outline",
+    rota: "Diario",
   },
   {
     id: "rede",
