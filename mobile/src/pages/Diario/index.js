@@ -65,11 +65,12 @@ return (
              <Text style={estilo.tituloCabecalho}>Diário de Ocorrências</Text>
              
           </View>
-          <TouchableOpacity style={estilo.botaoMarcaPagina}>
-             <Text style={estilo.textoMarcaPagina}>Marca-página</Text>
-             <MaterialCommunityIcons name="bookmark-outline" size={16} color={CORES.roxo} />
-          </TouchableOpacity>
-        </View>
+          <TouchableOpacity style={estilo.botaoMarcaPagina} 
+           onPress={() => navigation.navigate('AreaApoio')}>
+            
+             <View style={estilo.corteMarcaPagina} />
+        </TouchableOpacity>
+             </View>
 
                 {/* Bloco de Novo Registro */}
         <View style={estilo.cardFormulario}>
@@ -146,7 +147,7 @@ return (
 
 
         {/* Botão de Voltar */}
-        <TouchableOpacity style={estilo.botaoVoltar} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={estilo.botaoVoltar} onPress={() => navigation.navigate('AreaApoio')}>
           <MaterialCommunityIcons name="arrow-left" size={18} color={CORES.roxo} />
           <Text style={estilo.textoVoltar}>Voltar</Text>
         </TouchableOpacity>

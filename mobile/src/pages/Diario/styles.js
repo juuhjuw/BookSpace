@@ -21,20 +21,38 @@ export const estilo = StyleSheet.create({
     fontWeight: 'bold', 
     color: CORES.roxo 
   },
-  subtitulo: { 
+  subtituloCabecalho: { 
     fontSize: 13, 
-    color: CORES.textoSecundario, 
-    padding: 13,
-    maxWidth: '220' 
+    color: CORES.textoSecundario,
+    marginTop: 2
   },
-  botaoMarcaPagina: { 
-    flexDirection: 'row', 
-    backgroundColor: '#F0A82F', 
-    paddingVertical: 8, 
-    paddingHorizontal: 12, 
-    borderRadius: 20, 
-    alignItems: 'center',
-    gap: 4 
+ botaoMarcaPagina: { 
+    position: 'absolute',
+    top: 0,                   // Toca exatamente na borda superior da tela
+    right: 13,                // Distância da borda direita
+    width: 48,                // Mais larga
+    height: 70,               // Bem comprida para baixo
+    backgroundColor: '#F5A623', // Amarelo sólido
+    borderBottomLeftRadius: 2,  // Cantos inferiores sutilmente arredondados
+    borderBottomRightRadius: 2,
+    zIndex: 20,               // Garante que fica por cima de tudo
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 2,
+    elevation: 4,
+  },
+corteMarcaPagina: {
+   position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 24,    // Metade da largura da fita (48 / 2)
+    borderRightWidth: 24,   // Metade da largura da fita (48 / 2)
+    borderBottomWidth: 14,    // Altura/profundidade do "V"
+    borderStyle: 'solid',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: CORES.fundo,
   },
   textoMarcaPagina: { 
     fontSize: 12, 
@@ -79,7 +97,8 @@ export const estilo = StyleSheet.create({
     paddingHorizontal: 16, 
     borderRadius: 8, 
     borderWidth: 1, 
-    borderColor: CORES.borda 
+    borderColor: CORES.borda,
+    backgroundColor: CORES.branco
   },
   textoEditar: { 
     color: CORES.roxo, 
@@ -87,7 +106,7 @@ export const estilo = StyleSheet.create({
     fontWeight: '600' 
   },
   botaoExcluir: { 
-    backgroundColor: '#B22222', 
+    backgroundColor: CORES.vermelho || '#B22222', 
     paddingVertical: 6, 
     paddingHorizontal: 16, 
     borderRadius: 8 
@@ -112,24 +131,28 @@ export const estilo = StyleSheet.create({
     marginBottom: 12 
   },
   input: { 
+    height: 44,
     borderWidth: 1, 
     borderColor: CORES.borda, 
-    borderRadius: 8, 
-    padding: 12, 
+    borderRadius: 10, 
+    paddingHorizontal: 12, 
     marginBottom: 12, 
     color: CORES.texto, 
-    backgroundColor: CORES.fundo 
+    backgroundColor: CORES.branco,
+    fontSize: 14
   },
   textArea: { 
-    height: 80, 
+    height: 90, 
+    paddingTop: 10,
     textAlignVertical: 'top' 
   },
   botaoSalvar: { 
     backgroundColor: CORES.roxo, 
-    borderRadius: 25, 
+    borderRadius: 10, 
     height: 45, 
     justifyContent: 'center', 
-    alignItems: 'center' 
+    alignItems: 'center',
+    marginTop: 4
   },
   textoBotaoSalvar: { 
     color: CORES.branco, 
@@ -143,9 +166,10 @@ export const estilo = StyleSheet.create({
     backgroundColor: CORES.branco, 
     borderWidth: 1, 
     borderColor: CORES.borda, 
-    borderRadius: 25, 
+    borderRadius: 10, 
     height: 45,
-    gap: 6 
+    gap: 6,
+    marginTop: 10
   },
   textoVoltar: { 
     color: CORES.roxo, 
