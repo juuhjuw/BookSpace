@@ -30,6 +30,7 @@ const OPCOES = [
     id: "risco",
     titulo: "Autoavaliação de Risco",
     icone: "chart-box-outline",
+    rota: "Autoavaliação",
   },
   {
     id: "perfil",

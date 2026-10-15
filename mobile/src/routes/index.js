@@ -4,6 +4,7 @@ import AreaApoio from "../pages/AreaApoio";
 import Perfil from "../pages/Perfil/Perfil";
 import RedeApoio from "../pages/RedeApoio";
 import TelaDiario from "../pages/Diario";
+import Autoavaliacao from "../pages/Autoavaliacao";
 import { CORES } from "../theme";
 
 const Stack = createNativeStackNavigator();
@@ -24,6 +25,7 @@ export default function Routes() {
       <Stack.Screen name="RedeApoio" component={RedeApoio} />
       <Stack.Screen name="Perfil" component={Perfil} />
       <Stack.Screen name="Diario" component={TelaDiario} />
+      <Stack.Screen name="Autoavaliação" component={Autoavaliacao} />
     </Stack.Navigator>
   );
 }
