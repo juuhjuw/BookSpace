@@ -24,6 +24,7 @@ const OPCOES = [
     id: "rede",
     titulo: "Rede de Apoio",
     icone: "account-group-outline",
+    rota: "RedeApoio",
   },
   {
     id: "risco",
