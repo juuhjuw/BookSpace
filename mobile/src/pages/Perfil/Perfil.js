@@ -7,6 +7,8 @@ import {
   TextInput,
 } from "react-native";
 
+import { CORES } from "../theme";
+
 export default function Perfil() {
   return (
     <View style={estilo.container}>
@@ -22,16 +24,16 @@ export default function Perfil() {
         <TextInput
           style={estilo.input}
           placeholder="Email ou usuária"
-          placeholderTextColor="#BABABA"
+          placeholderTextColor= {CORES.itemDesabilitado}
         />
         <TextInput
           style={estilo.input}
           placeholder="PIN"
-          placeholderTextColor="#BABABA"
+          placeholderTextColor={CORES.itemDesabilitado}
           secureTextEntry={true}
         />
         <TouchableOpacity style={estilo.botao}>
-          <Text style={{ color: "#FFF", fontSize: 18, fontWeight: "bold" }}>
+          <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "bold" }}>
             Entrar
           </Text>
         </TouchableOpacity>
@@ -43,7 +45,7 @@ const estilo = StyleSheet.create({
   container: {
     flex: 1,
     // justifyContent: "space-between",
-    backgroundColor: "#FDFBF7",
+    backgroundColor: CORES.fundo,
   },
   headerTopo: {
     flexDirection: "row",
@@ -58,7 +60,7 @@ const estilo = StyleSheet.create({
     marginRight: 10,
   },
   tituloPag: {
-    color: "#4B1D5C",
+    color: CORES.roxo,
     fontWeight: "bold",
     fontSize: 25,
   },
@@ -69,7 +71,7 @@ const estilo = StyleSheet.create({
     marginTop: 250,
   },
   subtitulo: {
-    color: "#4B1D5C",
+    color: CORES.roxo,
     fontWeight: "bold",
     fontSize: 35,
     marginBottom: 5,
@@ -81,7 +83,7 @@ const estilo = StyleSheet.create({
     textAlign: "center",
   },
   botao: {
-    backgroundColor: "#4B1D5C",
+    backgroundColor: CORES.roxo,
     borderRadius: 30,
     width: "100%",
     height: 50,
@@ -93,12 +95,12 @@ const estilo = StyleSheet.create({
     width: "100%",
     height: 50,
     borderWidth: 1,
-    borderColor: "#4B1D5C",
+    borderColor: CORES.roxo,
     borderRadius: 25,
     paddingHorizontal: 20,
     fontSize: 16,
     color: "#BABABA",
-    backgroundColor: "#FFF",
+    backgroundColor: CORES.branco,
     marginBottom: 20,
   },
   ondaRodape: {
