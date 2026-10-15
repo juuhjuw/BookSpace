@@ -24,13 +24,22 @@ export default function PIN({ navigation, onVoltar, onSucesso }) {
   };
 
   const Entrar = () => {
-    if (pin === PIN_PADRAO) {
-      if (onSucesso) return onSucesso();
-    } else {
-      Alert.alert("PIN incorreto", "Confira o código e tente novamente.");
-      setPin("");
+  if (pin.length !== 4) {
+    Alert.alert("Atenção", "Digite os 4 números do PIN.");
+    return;
+  }
+
+  if (pin === PIN_PADRAO) {
+    if (onSucesso) {
+      onSucesso();
+    } else if (navigation?.navigate) {
+      navigation.navigate("Notas");
     }
-  };
+  } else {
+    Alert.alert("PIN incorreto", "Confira o código e tente novamente.");
+    setPin("");
+  }
+};
 
   return (
     <SafeAreaView style={estilo.safe}>

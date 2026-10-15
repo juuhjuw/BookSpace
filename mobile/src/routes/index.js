@@ -6,6 +6,7 @@ import PIN from "../pages/Perfil/PIN";
 import RedeApoio from "../pages/RedeApoio";
 import Autoavaliacao from "../pages/Autoavaliacao";
 import TelaDiario from "../pages/Diario/index";
+import Biblioteca from "../pages/Perfil/Biblioteca";
 import { CORES } from "../theme";
 
 const Stack = createNativeStackNavigator();
@@ -13,7 +14,7 @@ const Stack = createNativeStackNavigator();
 export default function Routes() {
   return (
     <Stack.Navigator
-      initialRouteName="Diario"
+      initialRouteName="Biblioteca"
       screenOptions={{
         headerShown: false,
         animation: "slide_from_right",
@@ -28,6 +29,7 @@ export default function Routes() {
       <Stack.Screen name="RedeApoio" component={RedeApoio} />
       <Stack.Screen name="Diario" component={TelaDiario} />
       <Stack.Screen name="Autoavaliação" component={Autoavaliacao} />
+      <Stack.Screen name="Biblioteca" component={Biblioteca} />
 
     </Stack.Navigator>
   );
