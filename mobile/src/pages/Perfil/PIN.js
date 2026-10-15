@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,14 +9,14 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
+} from "react-native";
 
-import { CORES } from "../theme";
+import { CORES } from "../../theme";
 
-const PIN_PADRAO = '1234';
+const PIN_PADRAO = "1234";
 
 export default function PIN({ navigation, onVoltar, onSucesso }) {
-  const [pin, setPin] = useState('');
+  const [pin, setPin] = useState("");
 
   const BotVoltar = () => {
     if (onVoltar) return onVoltar();
@@ -27,8 +27,8 @@ export default function PIN({ navigation, onVoltar, onSucesso }) {
     if (pin === PIN_PADRAO) {
       if (onSucesso) return onSucesso();
     } else {
-      Alert.alert('PIN incorreto', 'Confira o código e tente novamente.');
-      setPin('');
+      Alert.alert("PIN incorreto", "Confira o código e tente novamente.");
+      setPin("");
     }
   };
 
@@ -36,14 +36,17 @@ export default function PIN({ navigation, onVoltar, onSucesso }) {
     <SafeAreaView style={estilo.safe}>
       <KeyboardAvoidingView
         style={estilo.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View>
           <Pressable
             onPress={BotVoltar}
-            style={({ pressed }) => [estilo.btnVoltar, pressed && estilo.pressed]}
+            style={({ pressed }) => [
+              estilo.btnVoltar,
+              pressed && estilo.pressed,
+            ]}
           >
-            <Text style={estilo.btnVoltarText}>←  Voltar</Text>
+            <Text style={estilo.btnVoltarText}>← Voltar</Text>
           </Pressable>
 
           <Text style={estilo.titulo}>Notas da editora</Text>
@@ -57,7 +60,7 @@ export default function PIN({ navigation, onVoltar, onSucesso }) {
             <TextInput
               style={estilo.input}
               value={pin}
-              onChangeText={(t) => setPin(t.replace(/\D/g, ''))}
+              onChangeText={(t) => setPin(t.replace(/\D/g, ""))}
               placeholder="..."
               placeholderTextColor={CORES.texto}
               keyboardType="number-pad"
@@ -69,13 +72,15 @@ export default function PIN({ navigation, onVoltar, onSucesso }) {
 
             <Pressable
               onPress={Entrar}
-              style={({ pressed }) => [estilo.btnEntrar, pressed && estilo.pressed]}
+              style={({ pressed }) => [
+                estilo.btnEntrar,
+                pressed && estilo.pressed,
+              ]}
             >
               <Text style={estilo.btnEntrarText}>Entrar</Text>
             </Pressable>
           </View>
         </View>
-
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -96,7 +101,7 @@ const estilo = StyleSheet.create({
   },
 
   btnVoltar: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     backgroundColor: CORES.fundo,
     borderWidth: 1,
     borderColor: CORES.borda,
@@ -112,7 +117,7 @@ const estilo = StyleSheet.create({
 
   titulo: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: CORES.roxo,
     marginBottom: 6,
   },
@@ -138,11 +143,11 @@ const estilo = StyleSheet.create({
   input: {
     height: 44,
     borderWidth: 1,
-    borderColor: '#e0dde0',
+    borderColor: "#e0dde0",
     borderRadius: 10,
     backgroundColor: CORES.branco,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: 6,
     color: CORES.texto,
     marginBottom: 18,
@@ -151,8 +156,8 @@ const estilo = StyleSheet.create({
     height: 40,
     backgroundColor: CORES.roxo,
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   btnEntrarText: {
     color: CORES.branco,

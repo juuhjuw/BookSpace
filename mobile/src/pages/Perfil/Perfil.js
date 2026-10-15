@@ -7,7 +7,7 @@ import {
   TextInput,
 } from "react-native";
 
-import { CORES } from "../theme";
+import { CORES } from "../../theme";
 
 export default function Perfil() {
   return (
@@ -24,7 +24,7 @@ export default function Perfil() {
         <TextInput
           style={estilo.input}
           placeholder="Email ou usuária"
-          placeholderTextColor= {CORES.itemDesabilitado}
+          placeholderTextColor={CORES.itemDesabilitado}
         />
         <TextInput
           style={estilo.input}
@@ -33,7 +33,9 @@ export default function Perfil() {
           secureTextEntry={true}
         />
         <TouchableOpacity style={estilo.botao}>
-          <Text style={{ color: CORES.branco, fontSize: 18, fontWeight: "bold" }}>
+          <Text
+            style={{ color: CORES.branco, fontSize: 18, fontWeight: "bold" }}
+          >
             Entrar
           </Text>
         </TouchableOpacity>
