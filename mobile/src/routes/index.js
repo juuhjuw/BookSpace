@@ -4,6 +4,7 @@ import AreaApoio from "../pages/AreaApoio";
 import Perfil from "../pages/Perfil/Perfil";
 import PIN from "../pages/Perfil/PIN";
 import RedeApoio from "../pages/RedeApoio";
+import Autoavaliacao from "../pages/Autoavaliacao";
 import TelaDiario from "../pages/Diario/index";
 import { CORES } from "../theme";
 
@@ -26,6 +27,7 @@ export default function Routes() {
       <Stack.Screen name="AreaApoio" component={AreaApoio} />
       <Stack.Screen name="RedeApoio" component={RedeApoio} />
       <Stack.Screen name="Diario" component={TelaDiario} />
+      <Stack.Screen name="Autoavaliação" component={Autoavaliacao} />
 
     </Stack.Navigator>
   );
