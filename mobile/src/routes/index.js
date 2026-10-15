@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import AreaApoio from "../pages/AreaApoio";
 import Perfil from "../pages/Perfil/Perfil";
+import RedeApoio from "../pages/RedeApoio";
 import TelaDiario from "../pages/Diario";
 import { CORES } from "../theme";
 
@@ -20,6 +21,7 @@ export default function Routes() {
       }}
     >
       <Stack.Screen name="AreaApoio" component={AreaApoio} />
+      <Stack.Screen name="RedeApoio" component={RedeApoio} />
       <Stack.Screen name="Perfil" component={Perfil} />
       <Stack.Screen name="Diario" component={TelaDiario} />
     </Stack.Navigator>
