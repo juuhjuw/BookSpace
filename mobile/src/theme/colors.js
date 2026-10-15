@@ -8,4 +8,6 @@ export const CORES = {
   textoSecundario: "#746D78",
   borda: "#E4DDE6",
   itemDesabilitado: "#AFA8B2",
+  vermelho: "#B42318",
+  vermelhoClaro: "#FDE2E2",
 };
