@@ -16,6 +16,12 @@ export default function TelaDiario ({ navigation }) {
     const [descricao, setDescricao ] =useState('');
     const [idEditando, setIdEditando] = useState(null);
 
+  function marcarPagina() {
+    if (navigation.canGoBack()) {
+      navigation.popToTop();
+    }
+  }
+
   const salvarRelato = () => {
     if (!categoria || !descricao) return;
 
@@ -107,7 +113,7 @@ return (
              
           </View>
           <TouchableOpacity style={estilo.botaoMarcaPagina} 
-           onPress={() => navigation.navigate('AreaApoio')}>
+           onPress={marcarPagina}>
             
              <View style={estilo.corteMarcaPagina} />
         </TouchableOpacity>
