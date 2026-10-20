@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 import PIN from "./PIN";
-import RedeApoio from '../AreaApoio'
+import RedeApoio from '../AreaApoio';
 import { CORES } from "../../theme";
 
 export default function Biblioteca({ navigation }) {

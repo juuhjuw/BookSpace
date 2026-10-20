@@ -10,7 +10,7 @@ import { useState } from "react";
 import { CORES } from "../../theme";
 
 //Armazenar os dados do usuário e do PIN
-export default function Perfil({ navigation }) {
+export default function Inicio({ navigation }) {
   const [usuario, setUsuario] = useState("");
   const [pin, setPin] = useState("");
   const [mensagem, setMensagem] = useState("");
