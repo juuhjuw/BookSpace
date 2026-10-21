@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Alert,
   Pressable,
@@ -8,11 +8,14 @@ import {
   Text,
   TextInput,
   View,
-  Platform
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { CORES } from "../../theme";
+
+const CHAVE_PERFIL = "@BookSpace: perfil";
 
 export default function MeuPerfil({ navigation, route }) {
 
@@ -24,6 +27,27 @@ export default function MeuPerfil({ navigation, route }) {
 
   const [formularioAberto, setFormularioAberto] = useState(false);
   const [editando, setEditando] = useState(false);
+
+  useEffect(() => {
+    async function carregarPerfil(){
+      try{
+        const dadosSalvos = await AsyncStorage.getItem(CHAVE_PERFIL);
+
+        if(dadosSalvos){
+          const dados = JSON.parse(dadosSalvos);
+
+          setPerfil({
+            nome: dados.nome || "",
+            email: dados.email || "",
+            pin: dados.pin || "",
+          });
+        }
+      }catch (erro){
+        console.log("Erro ao carregar o Perfil: ", erro)
+      }
+    }
+    carregarPerfil();
+  }, []);
 
   function abrirCadastro() {
     setNome("");
@@ -41,28 +65,35 @@ export default function MeuPerfil({ navigation, route }) {
     setFormularioAberto(true);
   }
 
-  function salvarPerfil() {
-    if (!nome.trim() || !email.trim() || !pin.trim()) {
+  async function salvarPerfil() {
+    if(!nome.trim() || !email.trim() || !pin.trim()){
       Alert.alert("Atenção", "Preencha todos os campos.");
       return;
-    }
+    }  
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-        Alert.alert("Atenção", "Digite um e-mail válido.");
-        return;
+      Alert.alert("Atenção", "Digite um e-mail válido.");
+      return;
     }
-
     if (!/^\d{4}$/.test(pin)) {
       Alert.alert("Atenção", "O PIN deve ter exatamente 4 números.");
       return;
     }
 
-    setPerfil({
+    const novoPerfil = {
       nome: nome.trim(),
-      email: email.trim(),
-      pin,
-    });
+       email: email.trim().toLowerCase(),
+       pin,
+     };
 
+    try {
+      await AsyncStorage.setItem(
+      CHAVE_PERFIL,
+      JSON.stringify(novoPerfil)
+    );
+
+    setPerfil(novoPerfil);
     setFormularioAberto(false);
+    setEditando(false);
 
     Alert.alert(
       "Sucesso",
@@ -70,36 +101,48 @@ export default function MeuPerfil({ navigation, route }) {
         ? "Perfil atualizado com sucesso!"
         : "Perfil adicionado com sucesso!"
     );
+  } catch (erro) {
+    console.log("Erro ao salvar perfil:", erro);
+    Alert.alert("Erro", "Não foi possível salvar o perfil.");
+    }
   }
-}
 
 function excluirPerfil() {
-  function confirmarExclusao() {
-    setPerfil(null);
-    setNome("");
-    setEmail("");
-    setPin("");
-    setFormularioAberto(false);
-    setEditando(false);
-  }
+    async function confirmarExclusao(){
+      try {
+        await AsyncStorage.removeItem(CHAVE_PERFIL);
 
-  if (Platform.OS === "web") {
-    const confirmou = window.confirm(
-      "Tem certeza de que deseja excluir seu perfil?"
-    );
+        setPerfil(null);
+        setNome("");
+        setEmail("");
+        setPin("");
+        setFormularioAberto(false);
+        setEditando(false);
 
-    if (confirmou) {
-      confirmarExclusao();
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Inicio"}],
+        });
+
+        Alert.alert("Sucesso", "Perfil foi excluído com sucesso!");
+      }catch (erro){
+        console.log("Erro ao excluir o perfil: ", erro);
+        Alert.alert("Erro", "Não foi possível concluir a exclusão do perfil!");
+      }
     }
-
-    return;
-  }
-
-  Alert.alert(
-    "Excluir perfil",
-    "Tem certeza de que deseja excluir seu perfil?",
-    [
-      {
+    if(Platform.OS === "web"){
+      const confirmacao = window.confirm(
+        "Tem certeza que deseja excluir seu perfil?"
+      );
+      if(confirmacao){
+        confirmarExclusao();
+      }
+      return;
+    }
+    Alert.alert(
+      "Excluir perfil",
+      "Tem certeza que deseja excluir seu perfil?",
+      [{
         text: "Cancelar",
         style: "cancel",
       },
@@ -107,10 +150,9 @@ function excluirPerfil() {
         text: "Excluir",
         style: "destructive",
         onPress: confirmarExclusao,
-      },
-    ]
-  );
-}
+      },]
+    );
+  }
 
   function cancelarFormulario() {
     setFormularioAberto(false);
@@ -120,12 +162,11 @@ function excluirPerfil() {
     setPin("");
   }
   
-const BotVoltar = () => {
-  if (navigation?.canGoBack()) {
-    navigation.goBack();
-  } else if (onVoltar) {
-    onVoltar();
-};
+  const BotVoltar = () => {
+    if (navigation?.canGoBack()) {
+      navigation.goBack();
+    }
+  };
 
   return (
     <SafeAreaView style={estilos.container}>
@@ -295,8 +336,8 @@ const BotVoltar = () => {
         )}
       </ScrollView>
     </SafeAreaView>
-  );
-}
+    );
+  }
 
 const estilos = StyleSheet.create({
   container: {

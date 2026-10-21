@@ -15,7 +15,7 @@ const Stack = createNativeStackNavigator();
 export default function Routes() {
   return (
     <Stack.Navigator
-      initialRouteName="Biblioteca"
+      initialRouteName="Inicio"
       screenOptions={{
         headerShown: false,
         animation: "slide_from_right",
