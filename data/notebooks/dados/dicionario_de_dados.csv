@@ -1,0 +1,161 @@
+coluna,significado,tipo estatístico,unidade,fonte,% vazio
+TP_NOT,Tipo de notificação (2 = individual),qualitativa nominal,—,oficial,0.0
+ID_AGRAVO,"Agravo notificado, CID-10 (Y09 = agressão)",qualitativa nominal,—,oficial,0.0
+DT_NOTIFIC,Data de preenchimento da notificação,data,dd/mm/aaaa,oficial,0.0
+SEM_NOT,Semana epidemiológica da notificação (AAAASS),qualitativa ordinal,semana,oficial,0.0
+NU_ANO,Ano da notificação,quantitativa discreta,ano,oficial,0.0
+SG_UF_NOT,UF da unidade notificadora (código IBGE),qualitativa nominal,—,oficial,0.0
+ID_MUNICIP,"Município da unidade notificadora (código IBGE, 6 dígitos)",qualitativa nominal,—,oficial,0.0
+DT_OCOR,Data da ocorrência da violência,data,dd/mm/aaaa,oficial,0.0
+SEM_PRI,Semana epidemiológica da ocorrência (AAAASS),qualitativa ordinal,semana,oficial,0.0
+ANO_NASC,Ano de nascimento,quantitativa discreta,ano,a confirmar,0.7
+NU_IDADE_N,Idade codificada: 1º dígito = unidade (4 = anos) + valor (4033 = 33 anos),qualitativa nominal (código),—,oficial,0.0
+IDADE_ANOS,Idade em anos (derivada de NU_IDADE_N por quem preparou o arquivo),quantitativa discreta,anos,a confirmar,0.0
+CS_SEXO,Sexo (F = feminino),qualitativa nominal,—,oficial,0.0
+CS_GESTANT,Gestante / trimestre,qualitativa nominal,—,oficial,0.0
+CS_RACA,Raça/cor autodeclarada,qualitativa nominal,—,oficial,0.2
+CS_ESCOL_N,Escolaridade,qualitativa ordinal,—,oficial,4.0
+SG_UF,UF de residência (código IBGE),qualitativa nominal,—,oficial,0.0
+ID_MN_RESI,Município de residência (código IBGE),qualitativa nominal,—,oficial,0.0
+ID_PAIS,País de residência,qualitativa nominal,—,oficial,0.0
+NDUPLIC,Marca de duplicidade (rotina interna do sistema),qualitativa nominal,—,oficial,100.0
+DT_INVEST,Data de investigação,data,dd/mm/aaaa,a confirmar,96.7
+ID_OCUPA_N,Ocupação (código CBO),qualitativa nominal,—,oficial,53.4
+SIT_CONJUG,Situação conjugal,qualitativa nominal,—,oficial,1.5
+DEF_TRANS,Possui deficiência/transtorno?,qualitativa nominal (binária),—,oficial,0.8
+DEF_FISICA,Tipo de deficiência (DEF_FISICA),qualitativa nominal (binária),—,oficial,1.2
+DEF_MENTAL,Tipo de deficiência (DEF_MENTAL),qualitativa nominal (binária),—,oficial,1.2
+DEF_VISUAL,Tipo de deficiência (DEF_VISUAL),qualitativa nominal (binária),—,oficial,1.2
+DEF_AUDITI,Tipo de deficiência (DEF_AUDITI),qualitativa nominal (binária),—,oficial,1.2
+TRAN_MENT,Tipo de transtorno (TRAN_MENT),qualitativa nominal (binária),—,oficial,1.2
+TRAN_COMP,Tipo de transtorno (TRAN_COMP),qualitativa nominal (binária),—,oficial,1.2
+DEF_OUT,Tipo de deficiência (DEF_OUT),qualitativa nominal (binária),—,oficial,1.3
+DEF_ESPEC,Outras deficiências/síndromes — TEXTO LIVRE (dado sensível),texto livre,—,oficial,99.1
+SG_UF_OCOR,UF de ocorrência (código IBGE),qualitativa nominal,—,oficial,3.3
+ID_MN_OCOR,Município de ocorrência (código IBGE),qualitativa nominal,—,oficial,3.3
+HORA_OCOR,Hora da ocorrência (hh:mm),quantitativa contínua,hora,oficial,39.9
+LOCAL_OCOR,Local de ocorrência,qualitativa nominal,—,oficial,0.0
+LOCAL_ESPE,Local de ocorrência 'Outro' — texto livre,texto livre,—,oficial,100.0
+OUT_VEZES,"A violência ocorreu outras vezes? (1 Sim, 2 Não, 9 Ignorado)",qualitativa nominal (binária),—,oficial,1.0
+LES_AUTOP,A lesão foi autoprovocada?,qualitativa nominal (binária),—,oficial,1.0
+VIOL_FISIC,Tipo de violência ocorrida (VIOL_FISIC),qualitativa nominal (binária),—,oficial,0.0
+VIOL_PSICO,Tipo de violência ocorrida (VIOL_PSICO),qualitativa nominal (binária),—,oficial,0.7
+VIOL_TORT,Tipo de violência ocorrida (VIOL_TORT),qualitativa nominal (binária),—,oficial,0.8
+VIOL_SEXU,Tipo de violência ocorrida (VIOL_SEXU),qualitativa nominal (binária),—,oficial,0.8
+VIOL_TRAF,Tipo de violência ocorrida (VIOL_TRAF),qualitativa nominal (binária),—,oficial,0.9
+VIOL_FINAN,Tipo de violência ocorrida (VIOL_FINAN),qualitativa nominal (binária),—,oficial,0.9
+VIOL_NEGLI,Tipo de violência ocorrida (VIOL_NEGLI),qualitativa nominal (binária),—,oficial,0.9
+VIOL_INFAN,Tipo de violência ocorrida (VIOL_INFAN),qualitativa nominal (binária),—,oficial,0.9
+VIOL_LEGAL,Tipo de violência ocorrida (VIOL_LEGAL),qualitativa nominal (binária),—,oficial,0.9
+VIOL_OUTR,Tipo de violência ocorrida (VIOL_OUTR),qualitativa nominal (binária),—,oficial,0.9
+VIOL_ESPEC,Outro tipo de violência — texto livre,texto livre,—,oficial,98.8
+AG_FORCA,Meio de agressão (AG_FORCA),qualitativa nominal (binária),—,oficial,0.4
+AG_ENFOR,Meio de agressão (AG_ENFOR),qualitativa nominal (binária),—,oficial,1.5
+AG_OBJETO,Meio de agressão (AG_OBJETO),qualitativa nominal (binária),—,oficial,1.6
+AG_CORTE,Meio de agressão (AG_CORTE),qualitativa nominal (binária),—,oficial,1.5
+AG_QUENTE,Meio de agressão (AG_QUENTE),qualitativa nominal (binária),—,oficial,1.7
+AG_ENVEN,Meio de agressão (AG_ENVEN),qualitativa nominal (binária),—,oficial,1.8
+AG_FOGO,Meio de agressão (AG_FOGO),qualitativa nominal (binária),—,oficial,1.7
+AG_AMEACA,Meio de agressão (AG_AMEACA),qualitativa nominal (binária),—,oficial,1.2
+AG_OUTROS,Meio de agressão (AG_OUTROS),qualitativa nominal (binária),—,oficial,2.3
+AG_ESPEC,Outro meio de agressão — texto livre,texto livre,—,oficial,93.0
+SEX_ASSEDI,Tipo de violência sexual (SEX_ASSEDI),qualitativa nominal (binária),—,oficial,1.0
+SEX_ESTUPR,Tipo de violência sexual (SEX_ESTUPR),qualitativa nominal (binária),—,oficial,0.9
+SEX_PUDOR,Tipo de violência sexual (SEX_PUDOR),qualitativa nominal (binária),—,oficial,96.6
+SEX_PORNO,Tipo de violência sexual (SEX_PORNO),qualitativa nominal (binária),—,oficial,1.0
+SEX_EXPLO,Tipo de violência sexual (SEX_EXPLO),qualitativa nominal (binária),—,oficial,1.0
+SEX_OUTRO,Tipo de violência sexual (SEX_OUTRO),qualitativa nominal (binária),—,oficial,1.1
+SEX_ESPEC,Outro tipo de violência sexual — texto livre,texto livre,—,oficial,99.6
+PEN_ORAL,Tipo de penetração (ficha mais nova) (PEN_ORAL),qualitativa nominal,—,a confirmar,99.9
+PEN_ANAL,Tipo de penetração (ficha mais nova) (PEN_ANAL),qualitativa nominal,—,a confirmar,99.9
+PEN_VAGINA,Tipo de penetração (ficha mais nova) (PEN_VAGINA),qualitativa nominal,—,a confirmar,99.9
+PROC_DST,Procedimento realizado (violência sexual) (PROC_DST),qualitativa nominal (binária),—,oficial,1.1
+PROC_HIV,Procedimento realizado (violência sexual) (PROC_HIV),qualitativa nominal (binária),—,oficial,1.1
+PROC_HEPB,Procedimento realizado (violência sexual) (PROC_HEPB),qualitativa nominal (binária),—,oficial,1.1
+PROC_SANG,Procedimento realizado (violência sexual) (PROC_SANG),qualitativa nominal (binária),—,oficial,1.1
+PROC_SEMEN,Procedimento realizado (violência sexual) (PROC_SEMEN),qualitativa nominal (binária),—,oficial,1.1
+PROC_VAGIN,Procedimento realizado (violência sexual) (PROC_VAGIN),qualitativa nominal (binária),—,oficial,6.7
+PROC_CONTR,Procedimento realizado (violência sexual) (PROC_CONTR),qualitativa nominal (binária),—,oficial,6.7
+PROC_ABORT,Procedimento realizado (violência sexual) (PROC_ABORT),qualitativa nominal (binária),—,oficial,6.7
+CONS_ABORT,Consequência da violência (ficha mais antiga) (CONS_ABORT),qualitativa nominal,—,a confirmar,100.0
+CONS_GRAV,Consequência da violência (ficha mais antiga) (CONS_GRAV),qualitativa nominal,—,a confirmar,100.0
+CONS_DST,Consequência da violência (ficha mais antiga) (CONS_DST),qualitativa nominal,—,a confirmar,100.0
+CONS_SUIC,Consequência da violência (ficha mais antiga) (CONS_SUIC),qualitativa nominal,—,a confirmar,100.0
+CONS_MENT,Consequência da violência (ficha mais antiga) (CONS_MENT),qualitativa nominal,—,a confirmar,100.0
+CONS_COMP,Consequência da violência (ficha mais antiga) (CONS_COMP),qualitativa nominal,—,a confirmar,100.0
+CONS_ESTRE,Consequência da violência (ficha mais antiga) (CONS_ESTRE),qualitativa nominal,—,a confirmar,100.0
+CONS_OUTR,Consequência da violência (ficha mais antiga) (CONS_OUTR),qualitativa nominal,—,a confirmar,100.0
+CONS_ESPEC,Consequência da violência (ficha mais antiga) (CONS_ESPEC),qualitativa nominal,—,a confirmar,100.0
+LESAO_NAT,Lesão: natureza/parte do corpo (ficha mais antiga) (LESAO_NAT),qualitativa nominal,—,a confirmar,100.0
+LESAO_ESPE,Lesão: natureza/parte do corpo (ficha mais antiga) (LESAO_ESPE),qualitativa nominal,—,a confirmar,100.0
+LESAO_CORP,Lesão: natureza/parte do corpo (ficha mais antiga) (LESAO_CORP),qualitativa nominal,—,a confirmar,100.0
+NUM_ENVOLV,Número de envolvidos (1 ou 2 ou mais),qualitativa ordinal,—,oficial,1.0
+REL_SEXUAL,Relação do provável autor com a vítima (REL_SEXUAL),qualitativa nominal (binária),—,oficial,100.0
+REL_PAI,Relação do provável autor com a vítima (REL_PAI),qualitativa nominal (binária),—,oficial,0.9
+REL_MAE,Relação do provável autor com a vítima (REL_MAE),qualitativa nominal (binária),—,oficial,0.9
+REL_PAD,Relação do provável autor com a vítima (REL_PAD),qualitativa nominal (binária),—,oficial,0.9
+REL_CONJ,Relação do provável autor com a vítima (REL_CONJ),qualitativa nominal (binária),—,oficial,0.4
+REL_EXCON,Relação do provável autor com a vítima (REL_EXCON),qualitativa nominal (binária),—,oficial,0.7
+REL_NAMO,Relação do provável autor com a vítima (REL_NAMO),qualitativa nominal (binária),—,oficial,0.8
+REL_EXNAM,Relação do provável autor com a vítima (REL_EXNAM),qualitativa nominal (binária),—,oficial,0.8
+REL_FILHO,Relação do provável autor com a vítima (REL_FILHO),qualitativa nominal (binária),—,oficial,0.9
+REL_DESCO,Relação do provável autor com a vítima (REL_DESCO),qualitativa nominal (binária),—,oficial,0.9
+REL_IRMAO,Relação do provável autor com a vítima (REL_IRMAO),qualitativa nominal (binária),—,oficial,0.9
+REL_CONHEC,Relação do provável autor com a vítima (REL_CONHEC),qualitativa nominal (binária),—,oficial,0.9
+REL_CUIDA,Relação do provável autor com a vítima (REL_CUIDA),qualitativa nominal (binária),—,oficial,0.9
+REL_PATRAO,Relação do provável autor com a vítima (REL_PATRAO),qualitativa nominal (binária),—,oficial,0.9
+REL_INST,Relação do provável autor com a vítima (REL_INST),qualitativa nominal (binária),—,oficial,0.9
+REL_POL,Relação do provável autor com a vítima (REL_POL),qualitativa nominal (binária),—,oficial,0.9
+REL_PROPRI,Relação do provável autor com a vítima (REL_PROPRI),qualitativa nominal (binária),—,oficial,0.9
+REL_OUTROS,Relação do provável autor com a vítima (REL_OUTROS),qualitativa nominal (binária),—,oficial,0.9
+REL_ESPEC,Outra relação com o autor — texto livre,texto livre,—,oficial,99.1
+AUTOR_SEXO,Sexo do provável autor,qualitativa nominal,—,oficial,0.0
+AUTOR_ALCO,Suspeita de uso de álcool pelo autor,qualitativa nominal (binária),—,oficial,0.8
+ENC_SAUDE,Encaminhamento (ficha mais antiga) (ENC_SAUDE),qualitativa nominal,—,a confirmar,100.0
+ENC_TUTELA,Encaminhamento (ficha mais antiga) (ENC_TUTELA),qualitativa nominal,—,a confirmar,100.0
+ENC_VARA,Encaminhamento (ficha mais antiga) (ENC_VARA),qualitativa nominal,—,a confirmar,100.0
+ENC_ABRIGO,Encaminhamento (ficha mais antiga) (ENC_ABRIGO),qualitativa nominal,—,a confirmar,100.0
+ENC_SENTIN,Encaminhamento (ficha mais antiga) (ENC_SENTIN),qualitativa nominal,—,a confirmar,100.0
+ENC_DEAM,Encaminhamento (ficha mais antiga) (ENC_DEAM),qualitativa nominal,—,a confirmar,100.0
+ENC_DPCA,Encaminhamento (ficha mais antiga) (ENC_DPCA),qualitativa nominal,—,a confirmar,100.0
+ENC_DELEG,Encaminhamento (ficha mais antiga) (ENC_DELEG),qualitativa nominal,—,a confirmar,100.0
+ENC_MPU,Encaminhamento (ficha mais antiga) (ENC_MPU),qualitativa nominal,—,a confirmar,100.0
+ENC_MULHER,Encaminhamento (ficha mais antiga) (ENC_MULHER),qualitativa nominal,—,a confirmar,100.0
+ENC_CREAS,Encaminhamento (ficha mais antiga) (ENC_CREAS),qualitativa nominal,—,a confirmar,100.0
+ENC_IML,Encaminhamento (ficha mais antiga) (ENC_IML),qualitativa nominal,—,a confirmar,100.0
+ENC_OUTR,Encaminhamento (ficha mais antiga) (ENC_OUTR),qualitativa nominal,—,a confirmar,100.0
+ENC_ESPEC,Encaminhamento (ficha mais antiga) (ENC_ESPEC),qualitativa nominal,—,a confirmar,100.0
+REL_TRAB,Violência relacionada ao trabalho?,qualitativa nominal (binária),—,oficial,1.7
+REL_CAT,Emitida comunicação de acidente de trabalho (CAT)?,qualitativa nominal,—,oficial,2.5
+CIRC_LESAO,"Circunstância da lesão (CID-10, cap. XX)",qualitativa nominal,—,oficial,57.9
+CLASSI_FIN,Classificação final do caso,qualitativa nominal,—,a confirmar,100.0
+EVOLUCAO,Evolução do caso,qualitativa nominal,—,a confirmar,100.0
+DT_OBITO,Data do óbito,data,dd/mm/aaaa,a confirmar,100.0
+DT_DIGITA,Data de digitação no sistema,data,dd/mm/aaaa,a confirmar,0.0
+DT_TRANSUS,Data de transferência do registro entre esferas do sistema (campo interno) (DT_TRANSUS),data,—,a confirmar,100.0
+DT_TRANSDM,Data de transferência do registro entre esferas do sistema (campo interno) (DT_TRANSDM),data,—,a confirmar,100.0
+DT_TRANSSM,Data de transferência do registro entre esferas do sistema (campo interno) (DT_TRANSSM),data,—,a confirmar,100.0
+DT_TRANSRM,Data de transferência do registro entre esferas do sistema (campo interno) (DT_TRANSRM),data,—,a confirmar,100.0
+DT_TRANSRS,Data de transferência do registro entre esferas do sistema (campo interno) (DT_TRANSRS),data,—,a confirmar,100.0
+DT_TRANSSE,Data de transferência do registro entre esferas do sistema (campo interno) (DT_TRANSSE),data,—,a confirmar,100.0
+REL_MAD,Relação do provável autor com a vítima (REL_MAD),qualitativa nominal (binária),—,oficial,0.9
+TPUNINOT,Tipo de unidade notificadora,qualitativa nominal,—,a confirmar,100.0
+ORIENT_SEX,Orientação sexual,qualitativa nominal,—,oficial,0.4
+IDENT_GEN,Identidade de gênero,qualitativa nominal,—,oficial,1.0
+VIOL_MOTIV,"Violência motivada por (sexismo, racismo...)",qualitativa nominal,—,oficial,0.7
+CICL_VID,Ciclo de vida do provável autor,qualitativa ordinal,—,oficial,0.4
+REDE_SAU,Encaminhamento para a rede (REDE_SAU),qualitativa nominal (binária),—,oficial,0.8
+ASSIST_SOC,Encaminhamento: assistência social (ASSIST_SOC),qualitativa nominal (binária),—,oficial,1.2
+REDE_EDUCA,Encaminhamento para a rede (REDE_EDUCA),qualitativa nominal (binária),—,oficial,1.2
+ATEND_MULH,Encaminhamento: rede de atendimento à mulher (ATEND_MULH),qualitativa nominal (binária),—,oficial,0.8
+CONS_TUTEL,Consequência da violência (ficha mais antiga) (CONS_TUTEL),qualitativa nominal,—,a confirmar,1.2
+CONS_IDO,Consequência da violência (ficha mais antiga) (CONS_IDO),qualitativa nominal,—,a confirmar,1.2
+DELEG_IDOS,Encaminhamento: delegacia (DELEG_IDOS),qualitativa nominal (binária),—,oficial,1.2
+DIR_HUMAN,Encaminhamento: centro de direitos humanos (DIR_HUMAN),qualitativa nominal (binária),—,oficial,1.2
+MPU,Encaminhamento: Ministério Público (MPU),qualitativa nominal (binária),—,oficial,1.2
+DELEG_CRIA,Encaminhamento: delegacia (DELEG_CRIA),qualitativa nominal (binária),—,oficial,0.5
+DELEG_MULH,Encaminhamento: delegacia (DELEG_MULH),qualitativa nominal (binária),—,oficial,1.1
+DELEG,Encaminhamento: delegacia (DELEG),qualitativa nominal (binária),—,oficial,1.2
+INFAN_JUV,Encaminhamento: justiça da infância e juventude (INFAN_JUV),qualitativa nominal (binária),—,oficial,1.2
+DEFEN_PUBL,Encaminhamento: defensoria pública (DEFEN_PUBL),qualitativa nominal (binária),—,oficial,1.2
+DT_ENCERRA,Data de encerramento do caso,data,dd/mm/aaaa,oficial,0.4
