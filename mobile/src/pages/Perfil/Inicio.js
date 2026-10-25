@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   TextInput,
 } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from "react";
 import { CORES } from "../../theme";
 
+const CHAVE_PERFIL = "@BookSpace: perfil";
+
 //Armazenar os dados do usuário e do PIN
-export default function Perfil({ navigation }) {
+export default function Inicio({ navigation }) {
   const [usuario, setUsuario] = useState("");
   const [pin, setPin] = useState("");
   const [mensagem, setMensagem] = useState("");
@@ -18,7 +21,7 @@ export default function Perfil({ navigation }) {
 
 
   //Função ao clicar no botão de login
-  const handleLogin = () => {
+  const handleLogin = async () => {
 
     if (!usuario.trim() || !pin.trim()) {
       setMensagem("Por favor, preencha todos os campos.");
@@ -30,6 +33,39 @@ export default function Perfil({ navigation }) {
       setTipoMensagem("erro"); 
       setMensagem("O PIN deve ter 4 dígitos numéricos.");
       return;
+    }
+
+    try{
+      const dadosSalvos = await AsyncStorage.getItem(CHAVE_PERFIL);
+      const emailDigitado = usuario.trim().toLowerCase();
+
+      if(!dadosSalvos){
+        const novoPerfil = {
+          email: emailDigitado,
+          pin,
+        };
+        await AsyncStorage.setItem(
+          CHAVE_PERFIL, JSON.stringify(novoPerfil)
+        );
+        setTipoMensagem("Sucesso");
+        setMensagem("Seu cadastro foi realizado com sucesso!!");
+        navigation?.navigate("Biblioteca");
+        return;
+      }
+
+      const perfil = JSON.parse(dadosSalvos);
+
+      if(perfil.email !== usuario.trim().toLowerCase() || perfil.pin !== pin){
+        setTipoMensagem("Erro");
+        setMensagem("E-mail ou PIN incorreto!!");
+        return;
+      }
+      setTipoMensagem("Sucesso");
+      setMensagem("Login realizado com sucesso!!");
+      navigation?.navigate("Biblioteca");
+    }catch{
+      setTipoMensagem("Erro");
+      setMensagem("Não foi possível concluir o salvamento do perfil!");
     }
 
     console.log("Dados do login:", { usuario, pin });

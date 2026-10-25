@@ -1,12 +1,13 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import AreaApoio from "../pages/AreaApoio";
-import Perfil from "../pages/Perfil/Perfil";
+import Perfil from "../pages/Perfil/MeuPerfil";
 import PIN from "../pages/Perfil/PIN";
 import RedeApoio from "../pages/RedeApoio";
 import Autoavaliacao from "../pages/Autoavaliacao";
 import TelaDiario from "../pages/Diario/index";
 import Biblioteca from "../pages/Perfil/Biblioteca";
+import Inicio from "../pages/Perfil/Inicio";
 import { CORES } from "../theme";
 
 const Stack = createNativeStackNavigator();
@@ -14,12 +15,12 @@ const Stack = createNativeStackNavigator();
 export default function Routes() {
   return (
     <Stack.Navigator
-      initialRouteName="Biblioteca"
+      initialRouteName="Inicio"
       screenOptions={{
         headerShown: false,
         animation: "slide_from_right",
         contentStyle: {
-          backgroundColor: CORES.fundo,
+        backgroundColor: CORES.fundo,
         },
       }}
     >
@@ -30,6 +31,7 @@ export default function Routes() {
       <Stack.Screen name="Diario" component={TelaDiario} />
       <Stack.Screen name="Autoavaliação" component={Autoavaliacao} />
       <Stack.Screen name="Biblioteca" component={Biblioteca} />
+      <Stack.Screen name="Inicio" component={Inicio} />
 
     </Stack.Navigator>
   );
