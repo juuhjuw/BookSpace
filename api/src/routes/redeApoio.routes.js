@@ -1,7 +1,5 @@
-// Rotas do CRUD: Rede de Apoio
-// Responsável: Guilherme Dorigan
-// TODO: GET, POST, PUT, DELETE
-const express = require('express');
-const router = express.Router();
-
-module.exports = router;
+const { ownedRoutes } = require('./owned.routes');
+const { contactController } = require('../controllers/redeApoio.controller');
+const { schemas } = require('../middleware/validation');
+// Propriedade do contato é determinada pela sessão.
+module.exports = db => ownedRoutes(contactController(db), schemas.contact);

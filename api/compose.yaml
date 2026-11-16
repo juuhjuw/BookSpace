@@ -1,0 +1,21 @@
+# Opcional: executa somente MySQL; a API roda com npm.
+services:
+  db:
+    image: mysql:8.4
+    ports:
+      - "127.0.0.1:${DB_PORT:-3306}:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-bookspace}
+      MYSQL_USER: ${DB_USER:-bookspace}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD no .env}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    # TODO: publicação exige backup protegido, TLS e credenciais próprias.
+volumes:
+  mysql_data:

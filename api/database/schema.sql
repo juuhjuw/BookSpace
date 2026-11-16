@@ -1,41 +1,7 @@
--- modelagem do DER 
-CREATE DATABASE IF NOT EXISTS bookspace CHARACTER SET utf8mb4;
-USE bookspace;
-
-CREATE TABLE IF NOT EXISTS `User` (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  nome VARCHAR(100) NOT NULL,
-  email VARCHAR(150) NOT NULL UNIQUE,
-  senha VARCHAR(255) NOT NULL,          
-  pin_seguranca VARCHAR(255) NOT NULL,  
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS Diario (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  titulo VARCHAR(150) NOT NULL,
-  descricao TEXT NOT NULL,
-  data_ocorrencia DATETIME,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES `User`(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS Rede_Apoio (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  nome_contato VARCHAR(100) NOT NULL,
-  telefone VARCHAR(20) NOT NULL,
-  prioridade INT DEFAULT 1,
-  FOREIGN KEY (user_id) REFERENCES `User`(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS Autoavaliacao (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  pontuacao_total INT,
-  nivel_risco VARCHAR(20),
-  respostas_json TEXT,
-  data_avaliacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES `User`(id) ON DELETE CASCADE
-);
+-- O rascunho antigo foi substituído pela migration versionada:
+-- database/migrations/001_initial.sql
+--
+-- Execute `npm run db:migrate` dentro de api/ para aplicar o schema e registrar
+-- versão/checksum. Não duplique DDL aqui: a migration é a fonte de verdade.
+-- TODO: se houver dados no schema antigo, criar migration de conversão específica
+-- com backup prévio. O runner recusa aplicar a base sobre tabelas preexistentes.

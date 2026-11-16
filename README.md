@@ -82,7 +82,7 @@ USO_IA.md
 
 ##  Como rodar
 
-Preencher: instalar dependências, subir a API, abrir o app com Expo
+A base da API e do MySQL, os comandos de execução, a seed, os contratos e as pendências estão em [api/README.md](api/README.md). O mobile ainda não está integrado à API.
 
 ##  Gestão do projeto
 
