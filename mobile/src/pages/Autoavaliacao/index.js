@@ -3,6 +3,7 @@ import {Alert,Pressable,ScrollView,StyleSheet,Text,View,} from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CORES } from "../../theme";
+import { API_URL } from "../../services/api";
 
 const PERGUNTAS = [
   "Ameaça com arma de fogo ou faca?",
@@ -14,7 +15,12 @@ const PONTUACAO_TOTAL = 26;
 const PONTOS_POR_PERGUNTA = PONTUACAO_TOTAL / PERGUNTAS.length;
 
 export default function Autoavaliacao({ navigation }) {
-  const [marcadas, setMarcadas] = useState([true, true, false]);
+  const [marcadas, setMarcadas] = useState([false, false, false]);
+  const [salvando, setSalvando] = useState(false);
+  const [mensagem, setMensagem] = useState("");
+  const [resultadoModelo, setResultadoModelo] = useState(null);
+  const [consultandoModelo, setConsultandoModelo] = useState(false);
+  const [erroModelo, setErroModelo] = useState("");
   const quantidadeMarcadas = marcadas.filter(Boolean).length;
   const pontuacao = ((quantidadeMarcadas * PONTUACAO_TOTAL) /PERGUNTAS.length).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
   const pontosPorPergunta = PONTOS_POR_PERGUNTA.toLocaleString("pt-BR", {maximumFractionDigits: 2,});
@@ -28,6 +34,87 @@ export default function Autoavaliacao({ navigation }) {
     setMarcadas((atuais) =>
       atuais.map((valor, i) => (i === index ? !valor : valor)),
     );
+  }
+
+  
+  async function salvarAutoavaliacao() {
+
+    if (salvando) return;
+    setSalvando(true);
+
+    try {
+      // Usuário fictício, somente para testes locais
+      const userIdTeste = 1;
+
+      const respostas = {};
+      marcadas.forEach((marcada, index) => {
+        respostas[`pergunta${index + 1}`] = marcada;
+      });
+
+      const resposta = await fetch(`${API_URL}/autoavaliacoes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userIdTeste,
+          pontuacao_total: Math.round(
+            (quantidadeMarcadas * PONTUACAO_TOTAL) / PERGUNTAS.length
+          ),
+          nivel_risco: nivelRisco,
+          respostas,
+        }),
+      });
+
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
+        throw new Error(dados.erro || "Erro ao salvar autoavaliação.");
+      }
+
+      setMensagem("Autoavaliação salva com sucesso!");
+    } catch (erro) {
+        setMensagem(`Erro ao salvar: ${erro.message}`);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function consultarModelo() {
+    if (consultandoModelo) return;
+
+    setConsultandoModelo(true);
+    setErroModelo("");
+    setResultadoModelo(null);
+
+    try {
+      // Exemplo fictício compatível com as variáveis do SINAN
+      const dadosExemplo = {
+        AG_AMEACA: 1,
+        AG_ENFOR: 0,
+        AG_FOGO: 1,
+      };
+
+      const resposta = await fetch(`${API_URL}/modelo/prever`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dadosExemplo),
+      });
+
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
+        throw new Error(dados.erro || "Erro ao consultar o modelo.");
+      }
+
+      setResultadoModelo(dados);
+    } catch (erro) {
+      setErroModelo(erro.message);
+    } finally {
+      setConsultandoModelo(false);
+    }
   }
 
   function marcarPagina() {
@@ -146,6 +233,77 @@ export default function Autoavaliacao({ navigation }) {
           </View>
 
           <Text style={styles.orientacao}>{orientacao}</Text>
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Salvar autoavaliação"
+          onPress={salvarAutoavaliacao}
+          disabled={salvando}
+          style={({ pressed }) => [
+            styles.botaoSalvar,
+            pressed && styles.pressionado,
+          ]}
+        >
+          <Text style={styles.textoBotaoSalvar}>
+            {salvando ? "Salvando..." : "Salvar autoavaliação"}
+          </Text>
+        </Pressable>
+
+        {mensagem !== "" && (
+          <Text style={{ textAlign: "center", color: CORES.roxo }}>
+            {mensagem}
+          </Text>
+        )}
+
+        <Pressable
+          onPress={() => navigation.navigate("Historico")}
+          style={styles.botaoVoltar}
+        >
+          <Text style={styles.textoBotaoVoltar}>
+            Ver histórico de autoavaliações
+          </Text>
+        </Pressable>
+
+        <View style={styles.cartaoPerguntas}>
+          <Text style={styles.tituloSecao}>
+            Demonstração de Data Science
+          </Text>
+
+          <Text style={styles.instrucao}>
+            Classificação acadêmica de recorrência registrada,
+            utilizando um exemplo fictício de dados do SINAN.
+          </Text>
+
+          <Pressable
+            style={styles.botaoSalvar}
+            onPress={consultarModelo}
+            disabled={consultandoModelo}
+          >
+            <Text style={styles.textoBotaoSalvar}>
+              {consultandoModelo
+                ? "Consultando modelo..."
+                : "Executar modelo de Data Science"}
+            </Text>
+          </Pressable>
+
+          {resultadoModelo !== null && (
+            <View>
+              <Text style={styles.orientacao}>
+                Classificação retornada: {resultadoModelo.classificacao}
+              </Text>
+
+              <Text style={styles.instrucao}>
+                {resultadoModelo.aviso}
+              </Text>
+            </View>
+          )}
+
+          {erroModelo !== "" && (
+            <Text style={styles.orientacao}>
+              Erro: {erroModelo}
+            </Text>
+          )}
         </View>
 
         <View style={styles.espacador} />
@@ -320,5 +478,17 @@ const styles = StyleSheet.create({
   },
   pressionado: {
     opacity: 0.75,
+  },
+  botaoSalvar: {
+    minHeight: 50,
+    backgroundColor: CORES.roxo,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  textoBotaoSalvar: {
+    color: CORES.branco,
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

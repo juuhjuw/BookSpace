@@ -9,13 +9,14 @@ import TelaDiario from "../pages/Diario/index";
 import Biblioteca from "../pages/Perfil/Biblioteca";
 import Inicio from "../pages/Perfil/Inicio";
 import { CORES } from "../theme";
+import Historico from "../pages/Autoavaliacao/Historico";
 
 const Stack = createNativeStackNavigator();
 
 export default function Routes() {
   return (
     <Stack.Navigator
-      initialRouteName="Inicio"
+      initialRouteName="RedeApoio"
       screenOptions={{
         headerShown: false,
         animation: "slide_from_right",
@@ -29,9 +30,10 @@ export default function Routes() {
       <Stack.Screen name="AreaApoio" component={AreaApoio} />
       <Stack.Screen name="RedeApoio" component={RedeApoio} />
       <Stack.Screen name="Diario" component={TelaDiario} />
-      <Stack.Screen name="Autoavaliação" component={Autoavaliacao} />
+      <Stack.Screen name="Autoavaliacao" component={Autoavaliacao} />
       <Stack.Screen name="Biblioteca" component={Biblioteca} />
       <Stack.Screen name="Inicio" component={Inicio} />
+      <Stack.Screen name="Historico" component={Historico} />
 
     </Stack.Navigator>
   );
