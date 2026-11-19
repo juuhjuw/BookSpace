@@ -16,7 +16,7 @@ const Stack = createNativeStackNavigator();
 export default function Routes() {
   return (
     <Stack.Navigator
-      initialRouteName="Autoavaliacao"
+      initialRouteName="RedeApoio"
       screenOptions={{
         headerShown: false,
         animation: "slide_from_right",
