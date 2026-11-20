@@ -1,3 +1,4 @@
+import { CommonActions } from "@react-navigation/native";
 import React, {useState} from 'react';
 
 import{  Text, View, Alert, TouchableOpacity, TextInput, ScrollView } from 'react-native'
@@ -17,9 +18,12 @@ export default function TelaDiario ({ navigation }) {
     const [idEditando, setIdEditando] = useState(null);
 
   function marcarPagina() {
-    if (navigation.canGoBack()) {
-      navigation.popToTop();
-    }
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "Biblioteca" }],
+      })
+    );
   }
 
   const salvarRelato = () => {
@@ -201,7 +205,7 @@ return (
 
 
         {/* Botão de Voltar */}
-        <TouchableOpacity style={estilo.botaoVoltar} onPress={() => navigation.navigate('AreaApoio')}>
+        <TouchableOpacity style={estilo.botaoVoltar} onPress={() => navigation.goBack()}>
           <MaterialCommunityIcons name="arrow-left" size={18} color={CORES.roxo} />
           <Text style={estilo.textoVoltar}>Voltar</Text>
         </TouchableOpacity>

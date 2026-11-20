@@ -15,31 +15,28 @@ import { CORES } from "../../theme";
 
 const PIN_PADRAO = "1234";
 
-export default function PIN({ navigation, onVoltar, onSucesso }) {
+export default function PIN({ navigation }) {
   const [pin, setPin] = useState("");
 
   const BotVoltar = () => {
-    if (onVoltar) return onVoltar();
-    if (navigation?.goBack) navigation.goBack();
+    navigation.goBack();
   };
 
   const Entrar = () => {
-  if (pin.length !== 4) {
-    Alert.alert("Atenção", "Digite os 4 números do PIN.");
-    return;
-  }
-
-  if (pin === PIN_PADRAO) {
-    if (onSucesso) {
-      onSucesso();
-    } else if (navigation?.navigate) {
-      navigation.navigate("Notas");
+    if (pin.length !== 4) {
+      Alert.alert("Atenção", "Digite os 4 números do PIN.");
+      return;
     }
-  } else {
-    Alert.alert("PIN incorreto", "Confira o código e tente novamente.");
-    setPin("");
-  }
-};
+
+    if (pin === PIN_PADRAO) {
+      setPin("");
+
+      navigation.replace("AreaApoio");
+    } else {
+      Alert.alert("PIN incorreto", "Confira o código e tente novamente.");
+      setPin("");
+    }
+  };
 
   return (
     <SafeAreaView style={estilo.safe}>
