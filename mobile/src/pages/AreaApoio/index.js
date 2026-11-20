@@ -8,12 +8,11 @@ import {
   View,
 } from "react-native";
 
-// tira o conteudo de tras do dinamique island
+import { CommonActions } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { CORES } from "../../theme";
 
-// Itens da lista da rede de apoio
 const OPCOES = [
   {
     id: "diario",
@@ -31,7 +30,7 @@ const OPCOES = [
     id: "risco",
     titulo: "Autoavaliação de Risco",
     icone: "chart-box-outline",
-    rota: "Autoavaliação",
+    rota: "Autoavaliacao",
   },
   {
     id: "perfil",
@@ -94,7 +93,6 @@ function ItemMenu({ titulo, icone, onPress }) {
 }
 
 export default function AreaApoio({ navigation }) {
-  // Liga para o telefone do card
   async function ligar(numero) {
     const enderecoTelefone = `tel:${numero}`;
     try {
@@ -104,14 +102,11 @@ export default function AreaApoio({ navigation }) {
           "Ligação indisponível",
           "Este aparelho não conseguiu abrir o telefone.",
         );
-        return; // Faz a tentativa de ligar, se não, retorna o alerta
+        return; 
       }
 
-      // Abre o aplicativo de telefone.
-      // A ligação não é iniciada automaticamente.
       await Linking.openURL(enderecoTelefone);
     } catch (erro) {
-      // Exibe uma mensagem caso ocorra algum problema inesperado.
       Alert.alert(
         "Não foi possível abrir o telefone",
         "Tente novamente ou digite o número manualmente.",
@@ -119,31 +114,29 @@ export default function AreaApoio({ navigation }) {
     }
   }
 
-  // Retorna para a primeira tela da pilha de navegação.
   function sairRapido() {
-    if (navigation.canGoBack()) {
-      navigation.popToTop();
-    }
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "Biblioteca" }],
+      })
+    );
   }
 
-  // Retorna apenas para a tela anterior caso exista
   function voltar() {
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
   }
-  const existeTelaAnterior = navigation.canGoBack(); // Verifica se existe tela anterior
+  const existeTelaAnterior = navigation.canGoBack();
 
   return (
-    // Mantem o conteudo fora da ilha dinamica
     <SafeAreaView style={styles.areaSegura}>
-      {/* Permite a rolagem quando o conteúdo não couber na altura da tela. */}
       <ScrollView
         contentContainerStyle={styles.conteudo}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Agrupa o título e o botão de saída rápida. */}
         <View style={styles.cabecalho}>
           <Text style={styles.titulo}>Área de apoio</Text>
 
@@ -171,7 +164,6 @@ export default function AreaApoio({ navigation }) {
           </Pressable>
         </View>
 
-        {/* Agrupa os cartões dos serviços de emergência. */}
         <View style={styles.linhaEmergencia}>
           <CartaoEmergencia
             numero="180"
@@ -223,12 +215,9 @@ export default function AreaApoio({ navigation }) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Voltar"
-          accessibilityState={{ disabled: !existeTelaAnterior }}
-          disabled={!existeTelaAnterior}
           onPress={voltar}
           style={({ pressed }) => [
             styles.botaoVoltar,
-            !existeTelaAnterior && styles.botaoVoltarDesabilitado,
             pressed && styles.pressionado,
           ]}
         >

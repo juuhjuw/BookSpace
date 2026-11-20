@@ -1,4 +1,4 @@
-
+import { CommonActions } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
 import {View,Text,ScrollView,Pressable,StyleSheet,} from "react-native";
 
@@ -11,6 +11,15 @@ export default function Historico({ navigation }) {
   const [erro, setErro] = useState("");
 
   const userIdTeste = 1;
+
+  function marcarPagina() {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "Biblioteca" }],
+      })
+    );
+  }
 
   async function carregarAvaliacoes() {
     setCarregando(true);
@@ -63,6 +72,17 @@ export default function Historico({ navigation }) {
       <Text style={styles.titulo}>
         Histórico de autoavaliações
       </Text>
+
+      <Pressable
+        style={styles.botaoMarcaPagina}
+        onPress={marcarPagina}
+        accessibilityRole="button"
+        accessibilityLabel="Marcar página"
+      >
+        <Text style={styles.textoMarcaPagina}>
+          Marcar-página
+        </Text>
+      </Pressable>
 
       <Pressable
         style={styles.botaoAtualizar}
@@ -176,6 +196,18 @@ const styles = StyleSheet.create({
   },
     textoExcluir: {
     color: CORES.branco,
+    fontWeight: "700",
+  },
+  botaoMarcaPagina: {
+    backgroundColor: CORES.laranja,
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 20,
+    alignItems: "center",
+  },
+
+  textoMarcaPagina: {
+    color: CORES.texto,
     fontWeight: "700",
   },
 });

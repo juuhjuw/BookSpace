@@ -20,58 +20,58 @@ export default function Inicio({ navigation }) {
   const [tipoMensagem, setTipoMensagem] = useState("");
 
 
-  //Função ao clicar no botão de login
   const handleLogin = async () => {
-
     if (!usuario.trim() || !pin.trim()) {
+      setTipoMensagem("erro");
       setMensagem("Por favor, preencha todos os campos.");
       return;
     }
 
-    //Validar o PIN (exemplo: deve ter 4 dígitos)
-    if (!/^\d{4}$/.test(pin)) { 
-      setTipoMensagem("erro"); 
+    if (!/^\d{4}$/.test(pin)) {
+      setTipoMensagem("erro");
       setMensagem("O PIN deve ter 4 dígitos numéricos.");
       return;
     }
 
-    try{
+    try {
       const dadosSalvos = await AsyncStorage.getItem(CHAVE_PERFIL);
       const emailDigitado = usuario.trim().toLowerCase();
 
-      if(!dadosSalvos){
+      if (!dadosSalvos) {
         const novoPerfil = {
           email: emailDigitado,
           pin,
         };
+
         await AsyncStorage.setItem(
-          CHAVE_PERFIL, JSON.stringify(novoPerfil)
+          CHAVE_PERFIL,
+          JSON.stringify(novoPerfil)
         );
-        setTipoMensagem("Sucesso");
-        setMensagem("Seu cadastro foi realizado com sucesso!!");
-        navigation?.navigate("Biblioteca");
+
+        setTipoMensagem("sucesso");
+        setMensagem("Cadastro realizado com sucesso!");
+
+        navigation.navigate("Biblioteca");
         return;
       }
 
       const perfil = JSON.parse(dadosSalvos);
 
-      if(perfil.email !== usuario.trim().toLowerCase() || perfil.pin !== pin){
-        setTipoMensagem("Erro");
-        setMensagem("E-mail ou PIN incorreto!!");
+      if (perfil.email !== emailDigitado || perfil.pin !== pin) {
+        setTipoMensagem("erro");
+        setMensagem("E-mail ou PIN incorreto!");
         return;
       }
-      setTipoMensagem("Sucesso");
-      setMensagem("Login realizado com sucesso!!");
-      navigation?.navigate("Biblioteca");
-    }catch{
-      setTipoMensagem("Erro");
-      setMensagem("Não foi possível concluir o salvamento do perfil!");
-    }
 
-    console.log("Dados do login:", { usuario, pin });
-    setTipoMensagem("sucesso");
-    setMensagem("Login realizado com sucesso!");
-    navigation?.navigate("Biblioteca");
+      setTipoMensagem("sucesso");
+      setMensagem("Login realizado com sucesso!");
+
+      navigation.navigate("Biblioteca");
+
+    } catch (erro) {
+      setTipoMensagem("erro");
+      setMensagem("Não foi possível realizar o login.");
+    }
   };
 
   return (

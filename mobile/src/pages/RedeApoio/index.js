@@ -1,3 +1,4 @@
+import { CommonActions } from "@react-navigation/native";
 import { useRef, useState } from "react";
 import {
   Pressable,
@@ -59,7 +60,12 @@ export default function RedeApoio({ navigation }) {
   }
 
   function marcarPagina() {
-    navigation.popToTop();
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "Biblioteca" }],
+      })
+    );
   }
 
   // Retorna para a tela anterior.
@@ -90,7 +96,7 @@ export default function RedeApoio({ navigation }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Marcar página"
-            accessibilityHint="Retorna para a primeira tela do aplicativo"
+            accessibilityHint="Retorna para a Biblioteca"
             onPress={marcarPagina}
             hitSlop={8}
             style={({ pressed }) => [

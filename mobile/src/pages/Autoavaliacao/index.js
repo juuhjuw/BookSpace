@@ -1,3 +1,4 @@
+import { CommonActions } from "@react-navigation/native";
 import React, { useState } from "react";
 import {Alert,Pressable,ScrollView,StyleSheet,Text,View,} from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -118,9 +119,12 @@ export default function Autoavaliacao({ navigation }) {
   }
 
   function marcarPagina() {
-    if (navigation.canGoBack()) {
-      navigation.popToTop();
-    }
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "Biblioteca" }],
+      })
+    );
   }
 
   function voltar() {
@@ -150,7 +154,7 @@ export default function Autoavaliacao({ navigation }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Marcar página"
-            accessibilityHint="Retorna para a primeira tela do aplicativo"
+            accessibilityHint="Retorna para a Biblioteca"
             onPress={marcarPagina}
             hitSlop={8}
             style={({ pressed }) => [
