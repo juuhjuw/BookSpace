@@ -66,9 +66,9 @@ Responsabilidades em grupo: navegação e disfarce de ponta a ponta, organizaç�
 ## Data Science
 
 - **Base:** SINAN — Violência Interpessoal/Autoprovocada, notificações de 2024, recortadas e anonimizadas para o projeto. O alvo `OUT_VEZES` informa recorrência já registrada, não episódio futuro.
-- **Validação:** regressão logística com imputação em pipeline, holdout estratificado de 20% e validação cruzada estratificada de cinco folds. No notebook: baseline de acurácia 72,34%, acurácia média 53,76%, precisão 84,19%, recall 44,43% e F1 58,16%; desempenho abaixo do baseline em acurácia.
+- **Validação:** regressão logística com imputação em pipeline, holdout estratificado de 20% e validação cruzada estratificada de cinco folds. No notebook: baseline de acurácia 72,34%; no holdout, acurácia de 54%; na validação cruzada, acurácia média de 53,76%, precisão de 84,19%, recall de 44,43% e F1 de 58,16%. O desempenho em acurácia ficou abaixo do baseline.
 - **Integração:** `GET /modelo/contexto` entrega apenas prevalência e métricas agregadas da base e do modelo. Respostas individuais não são enviadas ao modelo nem transformadas em pontuação ou classificação de risco. O notebook já contém células executadas, métricas e gráficos; consulte [`data/README.md`](data/README.md) para reprodução.
-- **Limite acadêmico:** esse classificador de recorrência registrada não avalia o risco de uma pessoa, não prevê violência futura e não substitui serviços profissionais.
+- **Limite acadêmico:** esse experimento de recorrência registrada tem desempenho abaixo do baseline e serve somente como contexto acadêmico agregado. Não avalia o risco de uma pessoa, não prevê violência futura e não substitui serviços profissionais.
 
 ##  Estrutura do repositório
 
@@ -85,7 +85,7 @@ USO_IA.md
 ### Pré-requisitos
 
 - Node.js 20 ou superior e npm.
-- MySQL 8 local (porta 3306).
+- MariaDB 10.4.32 local (porta 3306). Este é o ambiente de banco validado (XAMPP 8.2.12); MySQL 8 não foi testado nesta entrega.
 - Python 3.11–3.13 somente para reproduzir o notebook.
 
 ### API
@@ -118,7 +118,14 @@ npm test
 npm start
 ```
 
-O endpoint `http://localhost:3000/health` confirma que a API está ativa. A API grava os registros relacionados por `user_id`; a exclusão de perfil remove registros dependentes pelo `ON DELETE CASCADE`. Os PINs são armazenados com scrypt; o login emite tokens bearer de 12 horas mantidos apenas em memória (reiniciar a API encerra as sessões). Este protótipo não tem HTTPS, recuperação de conta ou infraestrutura de autenticação para produção: não o exponha publicamente nem use dados sensíveis reais. Os testes HTTP usam repositórios em memória e não substituem uma validação com MySQL.
+O endpoint `http://localhost:3000/health` confirma que a API está ativa. A API grava os registros relacionados por `user_id`; a exclusão de perfil remove registros dependentes pelo `ON DELETE CASCADE`. Os PINs são armazenados com scrypt; o login emite tokens bearer de 12 horas mantidos apenas em memória (reiniciar a API encerra as sessões). Este protótipo não tem HTTPS, recuperação de conta ou infraestrutura de autenticação para produção: não o exponha publicamente nem use dados sensíveis reais.
+
+### Validação e pendências da Entrega 4
+
+- A API foi exercitada em `localhost:3000` com MariaDB 10.4.32 do XAMPP e dados sintéticos. Passaram 29 verificações de cadastro/login, consulta e listagem de perfis, CRUD de Diário, Rede de Apoio e Autoavaliação, contexto agregado do modelo, isolamento por `user_id`, chaves estrangeiras e exclusão em cascata. Os registros temporários foram removidos.
+- `npm test` usa repositórios em memória; esses testes não substituem o smoke test da API com banco real nem testes de integração no dispositivo.
+- Ainda precisam de validação manual em aparelho ou emulador: entrada camuflada, PIN, saída rápida e conexão pela rede do dispositivo.
+- A atualização do quadro Kanban e os commits individuais dos demais integrantes continuam pendentes.
 
 Todos os recursos do CRUD exigem `Authorization: Bearer <token>`; `POST /usuarios` (cadastro), `POST /usuarios/login` e `GET /modelo/contexto` são as exceções públicas. A listagem de usuários retorna apenas o perfil da sessão:
 
