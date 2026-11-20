@@ -1,158 +1,171 @@
 import { CommonActions } from "@react-navigation/native";
-import React, {useState} from 'react';
-
-import{  Text, View, Alert, TouchableOpacity, TextInput, ScrollView } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Swipeable } from 'react-native-gesture-handler';
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { CORES } from "../../theme";
-import { DADOS_DIARIO } from './dados';
-import { CATEGORIAS_FIXAS } from './dados';
-import { estilo } from './styles'
+import { requisitar } from "../../services/api";
+import { obterUsuarioAtual } from "../../services/session";
+import { estilo } from "./styles";
 
+const CATEGORIAS = [
+  "Violência Física",
+  "Violência Psicológica",
+  "Violência Moral",
+  "Violência Patrimonial",
+  "Violência Sexual",
+  "Outros / Relato Geral",
+];
 
-export default function TelaDiario ({ navigation }) {
-    const [relatos, setRelatos] = useState(DADOS_DIARIO)
-    const [categoria, setCategoria ] = useState('');
-    const [descricao, setDescricao ] =useState('');
-    const [idEditando, setIdEditando] = useState(null);
+function dataExibida(valor) {
+  if (!valor) return "Data não informada";
+  const data = new Date(valor);
+  return Number.isNaN(data.getTime()) ? "Data não informada" : data.toLocaleString("pt-BR");
+}
 
-  function marcarPagina() {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: "Biblioteca" }],
-      })
-    );
+export default function TelaDiario({ navigation }) {
+  const [usuario, setUsuario] = useState(null);
+  const [relatos, setRelatos] = useState([]);
+  const [categoria, setCategoria] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [idEditando, setIdEditando] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+
+  async function carregarRelatos() {
+    setCarregando(true);
+    setErro("");
+    try {
+      const sessao = await obterUsuarioAtual();
+      if (!sessao) throw new Error("Entre novamente para acessar seus registros.");
+      setUsuario(sessao);
+      setRelatos(await requisitar(`/diarios?user_id=${sessao.id}`));
+    } catch (falha) {
+      setErro(falha.message);
+    } finally {
+      setCarregando(false);
+    }
   }
 
-  const salvarRelato = () => {
-    if (!categoria || !descricao) return;
+  useEffect(() => { carregarRelatos(); }, []);
 
-    if (idEditando !== null) {
-      // Atualiza o relato existente
-      const relatosAtualizados = relatos.map((item) => {
-        if (item.id === idEditando) {
-          return { ...item, categoria, descricao };
-        }
-        return item;
-      });
-      setRelatos(relatosAtualizados);
-      setIdEditando(null);
-    } else {
-      // Cria um novo relato
-      const novoRelato = {
-        id: String(Date.now()),
-        categoria, 
-        descricao,
-        data_ocorrencia: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setRelatos([novoRelato, ...relatos]);
+  function marcarPagina() {
+    navigation.dispatch(CommonActions.reset({
+      index: 0,
+      routes: [{ name: "Biblioteca" }],
+    }));
+  }
+
+  function iniciarEdicao(item) {
+    setIdEditando(item.id);
+    setCategoria(item.titulo);
+    setDescricao(item.descricao);
+    setErro("");
+  }
+
+  function cancelarEdicao() {
+    setIdEditando(null);
+    setCategoria("");
+    setDescricao("");
+  }
+
+  async function salvarRelato() {
+    if (!usuario || salvando) return;
+    if (!categoria || !descricao.trim()) {
+      setErro("Escolha uma categoria e descreva o registro.");
+      return;
     }
 
-    setCategoria('');
-    setDescricao('');
-  };
+    setSalvando(true);
+    setErro("");
+    try {
+      const corpo = JSON.stringify({
+        user_id: usuario.id,
+        titulo: categoria,
+        descricao: descricao.trim(),
+        data_ocorrencia: new Date().toISOString(),
+      });
+      await requisitar(
+        idEditando === null ? "/diarios" : `/diarios/${idEditando}`,
+        { method: idEditando === null ? "POST" : "PUT", body: corpo },
+      );
+      cancelarEdicao();
+      await carregarRelatos();
+    } catch (falha) {
+      setErro(falha.message);
+    } finally {
+      setSalvando(false);
+    }
+  }
 
-  // Preenche os campos para editar
-  const iniciarEdicao = (item) => {
-    setIdEditando(item.id);
-    setCategoria(item.categoria);
-    setDescricao(item.descricao);
-  };
+  async function excluirRelato(id) {
+    try {
+      await requisitar(`/diarios/${id}?user_id=${usuario.id}`, { method: "DELETE" });
+      setRelatos((atuais) => atuais.filter((item) => item.id !== id));
+      if (idEditando === id) cancelarEdicao();
+    } catch (falha) {
+      setErro(falha.message);
+    }
+  }
 
-  //alerta de segurança
-  const confirmarExclusao = (id) => {
-    Alert.alert(
-      "Excluir Ocorrência",
-      "Tem certeza de que deseja excluir este item? Esta ação não pode ser desfeita.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Excluir", 
-          style: "destructive", 
-          onPress: () => excluirRelato(id) 
-        }
-      ]
-    );
-  };
+  function confirmarExclusao(id) {
+    if (Platform.OS === "web") {
+      if (window.confirm("Excluir este registro? Esta ação não pode ser desfeita.")) {
+        excluirRelato(id);
+      }
+      return;
+    }
+    Alert.alert("Excluir ocorrência", "Esta ação não pode ser desfeita.", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Excluir", style: "destructive", onPress: () => excluirRelato(id) },
+    ]);
+  }
 
-  // Exclui o relato pelo id
-  const excluirRelato = (id) => {
-    setRelatos(relatos.filter((item) => item.id !== id));
-  };
-
-  const renderLeftActions = (item) => {
-    return (
-      <TouchableOpacity 
-        style={[estilo.botaoEditar, { backgroundColor: '#b7f1cf' }]} 
-        onPress={() => iniciarEdicao(item)}
-      >
-        <MaterialCommunityIcons name="pencil-outline" size={19} color="#07ad4d" />
-        <Text style={estilo.textoEditar}>Editar</Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderRightActions = (item) => {
-    return (
-      <TouchableOpacity 
-        style={[estilo.botaoExcluir, { backgroundColor: '#ffcac5' }]} 
-        onPress={() => confirmarExclusao(item.id)}
-      >
-        <MaterialCommunityIcons  name="trash-can-outline" size={19} color={CORES.vermelho} />
-        <Text style={estilo.textoAcaoSwipe}>Excluir</Text>
-      </TouchableOpacity>
-    );
-  };
-
-return (
+  return (
     <SafeAreaView style={estilo.container}>
-      <ScrollView contentContainerStyle={estilo.scrollContent}>
-        
-           {/* Cabeçalho */}
+      <ScrollView contentContainerStyle={estilo.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={estilo.header}>
-          <View>
-             <Text style={estilo.tituloCabecalho}>Diário de Ocorrências</Text>
-             
-          </View>
-          <TouchableOpacity style={estilo.botaoMarcaPagina} 
-           onPress={marcarPagina}>
-            
-             <View style={estilo.corteMarcaPagina} />
-        </TouchableOpacity>
-             </View>
+          <Text style={estilo.tituloCabecalho}>Diário de Ocorrências</Text>
+          <TouchableOpacity style={estilo.botaoMarcaPagina} onPress={marcarPagina}>
+            <View style={estilo.corteMarcaPagina} />
+          </TouchableOpacity>
+        </View>
 
-        {/* Bloco de Novo Registro */}
         <View style={estilo.cardFormulario}>
-          <Text style={estilo.formTitulo}>{idEditando !== null ? 'Editar registro' : 'Novo registro'}</Text>
-          
-          {/* Seletor de Categorias fixas */}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-            { CATEGORIAS_FIXAS.map((cat) => {
-              const selecionado = categoria === cat;
+          <Text style={estilo.formTitulo}>{idEditando === null ? "Novo registro" : "Editar registro"}</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+            {CATEGORIAS.map((item) => {
+              const selecionado = categoria === item;
               return (
                 <TouchableOpacity
-                  key={cat}
-                  onPress={() => setCategoria(cat)}
+                  key={item}
+                  onPress={() => setCategoria(item)}
                   style={{
-                    backgroundColor: selecionado ? CORES.roxo : '#F0EEF5',
+                    backgroundColor: selecionado ? CORES.roxo : "#F0EEF5",
                     paddingVertical: 8,
                     paddingHorizontal: 12,
                     borderRadius: 8,
                     borderWidth: 1,
-                    borderColor: selecionado ? CORES.roxo : '#DCD6E4'
+                    borderColor: selecionado ? CORES.roxo : "#DCD6E4",
                   }}
                 >
-                  <Text style={{ color: selecionado ? '#FFF' : '#444', fontSize: 13, fontWeight: '600' }}>
-                    {cat}
+                  <Text style={{ color: selecionado ? "#FFF" : "#444", fontSize: 13, fontWeight: "600" }}>
+                    {item}
                   </Text>
                 </TouchableOpacity>
               );
             })}
           </View>
-
-          {/* Campo de Descrição */}
           <TextInput
             style={[estilo.input, estilo.textArea]}
             placeholder="O que aconteceu?"
@@ -162,56 +175,46 @@ return (
             value={descricao}
             onChangeText={setDescricao}
           />
-
-        {/* Botão de Salvar */}
-        <TouchableOpacity style={estilo.botaoSalvar} onPress={salvarRelato}>
+          <TouchableOpacity style={estilo.botaoSalvar} onPress={salvarRelato} disabled={salvando}>
             <Text style={estilo.textoBotaoSalvar}>
-              {idEditando !== null ? 'Salvar Alterações' : 'Salvar'}
+              {salvando ? "Salvando..." : idEditando === null ? "Salvar registro" : "Salvar alterações"}
             </Text>
-        </TouchableOpacity>
-
+          </TouchableOpacity>
+          {idEditando !== null && (
+            <Pressable onPress={cancelarEdicao} style={estilo.botaoVoltar}>
+              <Text style={estilo.textoVoltar}>Cancelar edição</Text>
+            </Pressable>
+          )}
         </View>
 
-            <View>
-                <Text style={estilo.subtitulo}>Histórico de Ocorrências</Text>
-            </View>
+        {!!erro && <Text accessibilityRole="alert" style={estilo.textoVoltar}>{erro}</Text>}
+        <View><Text style={estilo.subtitulo}>Histórico de Ocorrências</Text></View>
+        {carregando && <Text>Carregando registros...</Text>}
+        {!carregando && !erro && relatos.length === 0 && <Text>Nenhum registro cadastrado.</Text>}
 
-        {/* Lista de Registros Salvos */}
         {relatos.map((item) => (
-          <Swipeable
-            key={item.id}
-            renderLeftActions ={() => renderLeftActions(item)}
-            renderRightActions={() => renderRightActions(item)}
-            onSwipeableOpen={(direction) => {
-              if (direction === 'left') {
-                // Arrastou para a direita -> Editar
-                iniciarEdicao(item);
-              } else if (direction === 'right') {
-                // Arrastou para a esquerda -> Excluir
-                confirmarExclusao(item.id);
-              }
-            }}
-          >
-          <View style={estilo.card}>
+          <View key={item.id} style={estilo.card}>
             <View style={estilo.cardHeaderInfo}>
-              <Text style={estilo.cardTitulo}>{item.categoria}</Text>
-              <Text style={estilo.cardData}>{item.data_ocorrencia}</Text>
+              <Text style={estilo.cardTitulo}>{item.titulo}</Text>
+              <Text style={estilo.cardData}>{dataExibida(item.data_ocorrencia || item.criado_em)}</Text>
             </View>
-
             <Text style={estilo.cardDescricao}>{item.descricao}</Text>
+            <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
+              <Pressable onPress={() => iniciarEdicao(item)}>
+                <Text style={estilo.textoVoltar}>Editar</Text>
+              </Pressable>
+              <Pressable onPress={() => confirmarExclusao(item.id)}>
+                <Text style={{ color: CORES.vermelho }}>Excluir</Text>
+              </Pressable>
+            </View>
           </View>
-          </Swipeable>
         ))}
 
-
-        {/* Botão de Voltar */}
         <TouchableOpacity style={estilo.botaoVoltar} onPress={() => navigation.goBack()}>
           <MaterialCommunityIcons name="arrow-left" size={18} color={CORES.roxo} />
           <Text style={estilo.textoVoltar}>Voltar</Text>
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
 }
-

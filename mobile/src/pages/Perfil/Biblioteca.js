@@ -303,7 +303,6 @@ export default function Biblioteca({ navigation }) {
 
             <TouchableOpacity
               style={[estilo.capa, estilo.roxo]}
-              onPress={() => navigation.navigate("PIN")}
               onLongPress={() => navigation.navigate("PIN")}
               delayLongPress={800}
             >

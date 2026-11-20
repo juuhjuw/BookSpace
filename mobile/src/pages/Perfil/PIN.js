@@ -6,35 +6,47 @@ import {
   Pressable,
   StyleSheet,
   SafeAreaView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-
+import { requisitar } from "../../services/api";
+import { obterUsuarioAtual, salvarUsuarioAtual } from "../../services/session";
 import { CORES } from "../../theme";
-
-const PIN_PADRAO = "1234";
 
 export default function PIN({ navigation }) {
   const [pin, setPin] = useState("");
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState("");
 
   const BotVoltar = () => {
     navigation.goBack();
   };
 
-  const Entrar = () => {
+  const Entrar = async () => {
     if (pin.length !== 4) {
-      Alert.alert("Atenção", "Digite os 4 números do PIN.");
+      setErro("Digite os quatro números do PIN.");
       return;
     }
 
-    if (pin === PIN_PADRAO) {
+    if (carregando) return;
+    setCarregando(true);
+    setErro("");
+    try {
+      const perfil = await obterUsuarioAtual();
+      if (!perfil) throw new Error("Entre novamente para confirmar o PIN.");
+      const resultado = await requisitar("/usuarios/login", {
+        method: "POST",
+        body: JSON.stringify({ email: perfil.email, pin }),
+        exigirToken: false,
+      });
+      await salvarUsuarioAtual({ ...resultado.usuario, token: resultado.token });
       setPin("");
-
       navigation.replace("AreaApoio");
-    } else {
-      Alert.alert("PIN incorreto", "Confira o código e tente novamente.");
+    } catch (falha) {
+      setErro(falha.message);
       setPin("");
+    } finally {
+      setCarregando(false);
     }
   };
 
@@ -75,6 +87,7 @@ export default function PIN({ navigation }) {
               textAlign="center"
               onSubmitEditing={Entrar}
             />
+            {!!erro && <Text style={estilo.erro} accessibilityRole="alert">{erro}</Text>}
 
             <Pressable
               onPress={Entrar}
@@ -83,7 +96,9 @@ export default function PIN({ navigation }) {
                 pressed && estilo.pressed,
               ]}
             >
-              <Text style={estilo.btnEntrarText}>Entrar</Text>
+              <Text style={estilo.btnEntrarText}>
+                {carregando ? "Verificando..." : "Entrar"}
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -168,6 +183,11 @@ const estilo = StyleSheet.create({
   btnEntrarText: {
     color: CORES.branco,
     fontSize: 14,
+  },
+  erro: {
+    color: CORES.vermelho,
+    textAlign: "center",
+    marginBottom: 12,
   },
   pressed: {
     opacity: 0.8,
