@@ -1,35 +1,10 @@
 
 require('dotenv').config();
 
-const express = require('express');
-const app = express();
-const cors = require("cors");
+const app = require('./src/app');
 
-const autoavaliacaoRoutes = require('./src/routes/autoavaliacao.routes');
-const modeloRoutes = require("./src/routes/modelo.routes");
+const PORT = Number(process.env.PORT) || 3000;
 
-app.use(cors({
-  origin: "http://localhost:8081",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
-
-app.use(express.json());
-
-app.get('/', (req, res) => {
-    res.json({ mensagem: 'API BookSpace funcionando!' });
-});
-
-app.use("/autoavaliacoes", autoavaliacaoRoutes);
-app.use("/modelo", modeloRoutes);
-
-app.use((erro, req, res, next) => {
-  console.error(erro);
-  res.status(500).json({ erro: "Erro interno do servidor." });
-});
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`API BookSpace disponível na porta ${PORT}`);
 });

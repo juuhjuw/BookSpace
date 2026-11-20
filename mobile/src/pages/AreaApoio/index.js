@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Linking,
@@ -12,6 +13,8 @@ import { CommonActions } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { CORES } from "../../theme";
+import { requisitar } from "../../services/api";
+import { obterUsuarioAtual } from "../../services/session";
 
 const OPCOES = [
   {
@@ -28,7 +31,7 @@ const OPCOES = [
   },
   {
     id: "risco",
-    titulo: "Autoavaliação de Risco",
+    titulo: "Registro de Sinais",
     icone: "chart-box-outline",
     rota: "Autoavaliacao",
   },
@@ -78,7 +81,7 @@ function ItemMenu({ titulo, icone, onPress }) {
   return (
     <Pressable
       accessible
-      accessibilityRole="text"
+      accessibilityRole="button"
       accessibilityLabel={titulo}
       onPress={onPress}
       style={({ pressed }) => [styles.itemMenu, pressed && styles.pressionado]}
@@ -93,6 +96,28 @@ function ItemMenu({ titulo, icone, onPress }) {
 }
 
 export default function AreaApoio({ navigation }) {
+  const [resumo, setResumo] = useState(null);
+  const [erroResumo, setErroResumo] = useState("");
+
+  useEffect(() => {
+    let ativo = true;
+    async function carregarResumo() {
+      try {
+        const usuario = await obterUsuarioAtual();
+        if (!usuario) throw new Error("Entre para consultar seus registros.");
+        const [registros, contatos] = await Promise.all([
+          requisitar(`/diarios?user_id=${usuario.id}`),
+          requisitar(`/rede-apoio?user_id=${usuario.id}`),
+        ]);
+        if (ativo) setResumo({ registros: registros.length, contatos: contatos.length });
+      } catch (erro) {
+        if (ativo) setErroResumo(erro.message);
+      }
+    }
+    carregarResumo();
+    return () => { ativo = false; };
+  }, []);
+
   async function ligar(numero) {
     const enderecoTelefone = `tel:${numero}`;
     try {
@@ -128,8 +153,6 @@ export default function AreaApoio({ navigation }) {
       navigation.goBack();
     }
   }
-  const existeTelaAnterior = navigation.canGoBack();
-
   return (
     <SafeAreaView style={styles.areaSegura}>
       <ScrollView
@@ -143,9 +166,7 @@ export default function AreaApoio({ navigation }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Sair rapidamente"
-            accessibilityHint="Retorna para a primeira tela do aplicativo"
-            accessibilityState={{ disabled: !existeTelaAnterior }}
-            disabled={!existeTelaAnterior}
+            accessibilityHint="Retorna para a biblioteca"
             onPress={sairRapido}
             hitSlop={8}
             style={({ pressed }) => [
@@ -184,13 +205,17 @@ export default function AreaApoio({ navigation }) {
         {/* Apresenta um resumo das informações registradas. */}
         <View
           accessible
-          accessibilityLabel="Resumo: zero registros, zero contatos e nenhum risco informado"
+          accessibilityLabel={resumo
+            ? `Resumo: ${resumo.registros} registros e ${resumo.contatos} contatos`
+            : "Resumo pessoal indisponível"}
           style={styles.cartaoResumo}
         >
-          <Text style={styles.tituloResumo}>Resumo</Text>
+          <Text style={styles.tituloResumo}>Seus registros</Text>
 
           <Text style={styles.textoResumo}>
-            0 registros · 0 contatos · risco não informado
+            {resumo
+              ? `${resumo.registros} registros · ${resumo.contatos} contatos`
+              : erroResumo || "Carregando..."}
           </Text>
         </View>
 
