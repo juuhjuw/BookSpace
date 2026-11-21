@@ -171,7 +171,6 @@ export default function AreaApoio({ navigation }) {
             hitSlop={8}
             style={({ pressed }) => [
               styles.botaoSair,
-              !existeTelaAnterior && styles.botaoDesabilitado,
               pressed && styles.pressionado,
             ]}
           >
@@ -306,11 +305,6 @@ const styles = StyleSheet.create({
     color: CORES.texto,
     fontSize: 14,
     fontWeight: "700",
-  },
-
-  // Aplica transparência aos elementos desabilitados.
-  botaoDesabilitado: {
-    opacity: 0.55,
   },
 
   // Organiza os dois cartões de emergência lado a lado.
