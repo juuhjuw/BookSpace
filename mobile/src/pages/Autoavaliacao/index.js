@@ -1,9 +1,13 @@
-import React, { useState } from "react";
+import { CommonActions } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
 import {Alert,Pressable,ScrollView,StyleSheet,Text,View,} from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CORES } from "../../theme";
-import { API_URL } from "../../services/api";
+import api from "../../services/api";
+import { obterSessao } from "../../services/sessao";
+
+
 
 const PERGUNTAS = [
   "Ameaça com arma de fogo ou faca?",
@@ -21,6 +25,11 @@ export default function Autoavaliacao({ navigation }) {
   const [resultadoModelo, setResultadoModelo] = useState(null);
   const [consultandoModelo, setConsultandoModelo] = useState(false);
   const [erroModelo, setErroModelo] = useState("");
+  const [usuaria, setUsuaria] = useState(null);
+
+  useEffect(() => {
+    obterSessao().then(setUsuaria);
+  }, []);
   const quantidadeMarcadas = marcadas.filter(Boolean).length;
   const pontuacao = ((quantidadeMarcadas * PONTUACAO_TOTAL) /PERGUNTAS.length).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
   const pontosPorPergunta = PONTOS_POR_PERGUNTA.toLocaleString("pt-BR", {maximumFractionDigits: 2,});
@@ -37,40 +46,34 @@ export default function Autoavaliacao({ navigation }) {
   }
 
   
+  function montarRespostas() {
+    const respostas = {};
+    marcadas.forEach((marcada, index) => {
+      respostas[`pergunta${index + 1}`] = marcada;
+    });
+    return respostas;
+  }
+
+  // salva a autoavaliação
   async function salvarAutoavaliacao() {
 
     if (salvando) return;
+    if (!usuaria) {
+      setMensagem("Faça login novamente para salvar.");
+      return;
+    }
     setSalvando(true);
+    setMensagem("");
 
     try {
-      // Usuário fictício, somente para testes locais
-      const userIdTeste = 1;
-
-      const respostas = {};
-      marcadas.forEach((marcada, index) => {
-        respostas[`pergunta${index + 1}`] = marcada;
+      await api.post("/autoavaliacoes", {
+        user_id: usuaria.id,
+        pontuacao_total: Math.round(
+          (quantidadeMarcadas * PONTUACAO_TOTAL) / PERGUNTAS.length
+        ),
+        nivel_risco: nivelRisco,
+        respostas: montarRespostas(),
       });
-
-      const resposta = await fetch(`${API_URL}/autoavaliacoes`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: userIdTeste,
-          pontuacao_total: Math.round(
-            (quantidadeMarcadas * PONTUACAO_TOTAL) / PERGUNTAS.length
-          ),
-          nivel_risco: nivelRisco,
-          respostas,
-        }),
-      });
-
-      const dados = await resposta.json();
-
-      if (!resposta.ok) {
-        throw new Error(dados.erro || "Erro ao salvar autoavaliação.");
-      }
 
       setMensagem("Autoavaliação salva com sucesso!");
     } catch (erro) {
@@ -80,35 +83,23 @@ export default function Autoavaliacao({ navigation }) {
     }
   }
 
+  // chama o modelo de Data Science (usa as respostas + o diário da usuária)
   async function consultarModelo() {
     if (consultandoModelo) return;
+    if (!usuaria) {
+      setErroModelo("Faça login novamente para consultar.");
+      return;
+    }
 
     setConsultandoModelo(true);
     setErroModelo("");
     setResultadoModelo(null);
 
     try {
-      // Exemplo fictício compatível com as variáveis do SINAN
-      const dadosExemplo = {
-        AG_AMEACA: 1,
-        AG_ENFOR: 0,
-        AG_FOGO: 1,
-      };
-
-      const resposta = await fetch(`${API_URL}/modelo/prever`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dadosExemplo),
+      const dados = await api.post("/modelo/prever", {
+        user_id: usuaria.id,
+        respostas: montarRespostas(),
       });
-
-      const dados = await resposta.json();
-
-      if (!resposta.ok) {
-        throw new Error(dados.erro || "Erro ao consultar o modelo.");
-      }
-
       setResultadoModelo(dados);
     } catch (erro) {
       setErroModelo(erro.message);
@@ -118,9 +109,12 @@ export default function Autoavaliacao({ navigation }) {
   }
 
   function marcarPagina() {
-    if (navigation.canGoBack()) {
-      navigation.popToTop();
-    }
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "Biblioteca" }],
+      })
+    );
   }
 
   function voltar() {
@@ -150,7 +144,7 @@ export default function Autoavaliacao({ navigation }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Marcar página"
-            accessibilityHint="Retorna para a primeira tela do aplicativo"
+            accessibilityHint="Retorna para a Biblioteca"
             onPress={marcarPagina}
             hitSlop={8}
             style={({ pressed }) => [
@@ -267,12 +261,13 @@ export default function Autoavaliacao({ navigation }) {
 
         <View style={styles.cartaoPerguntas}>
           <Text style={styles.tituloSecao}>
-            Demonstração de Data Science
+            Organização do diário (Data Science)
           </Text>
 
           <Text style={styles.instrucao}>
-            Classificação acadêmica de recorrência registrada,
-            utilizando um exemplo fictício de dados do SINAN.
+            Compara seus registros do diário e as respostas acima com
+            notificações públicas do SINAN 2024 para sugerir se vale
+            completar o histórico de episódios.
           </Text>
 
           <Pressable
@@ -283,18 +278,26 @@ export default function Autoavaliacao({ navigation }) {
             <Text style={styles.textoBotaoSalvar}>
               {consultandoModelo
                 ? "Consultando modelo..."
-                : "Executar modelo de Data Science"}
+                : "Ver estimativa"}
             </Text>
           </Pressable>
 
           {resultadoModelo !== null && (
-            <View>
-              <Text style={styles.orientacao}>
-                Classificação retornada: {resultadoModelo.classificacao}
+            <View style={styles.cartaoModelo}>
+              <Text style={styles.seloEstimativa}>ESTIMATIVA ACADÊMICA</Text>
+              <Text style={styles.faixaModelo}>
+                Semelhança {resultadoModelo.faixa.toLowerCase()} com registros recorrentes
               </Text>
-
+              <Text style={styles.orientacao}>
+                {resultadoModelo.mensagem}
+              </Text>
               <Text style={styles.instrucao}>
-                {resultadoModelo.aviso}
+                Base: {resultadoModelo.origem?.categorias_diario?.length || 0} categoria(s) do seu diário
+                + suas respostas. Probabilidade estimada pelo modelo:{" "}
+                {Math.round(resultadoModelo.probabilidade * 100)}%.
+              </Text>
+              <Text style={styles.avisoModelo}>
+                ⚠️ {resultadoModelo.aviso}
               </Text>
             </View>
           )}
@@ -490,5 +493,32 @@ const styles = StyleSheet.create({
     color: CORES.branco,
     fontSize: 14,
     fontWeight: "700",
+  },
+  cartaoModelo: {
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: CORES.roxoClaro,
+    gap: 8,
+  },
+  seloEstimativa: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    backgroundColor: CORES.laranja,
+    color: CORES.texto,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  faixaModelo: {
+    color: CORES.roxo,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  avisoModelo: {
+    color: CORES.textoSecundario,
+    fontSize: 12,
+    fontStyle: "italic",
   },
 });

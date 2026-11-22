@@ -1,14 +1,6 @@
 import React, { useState } from "react";
 
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-    Pressable 
-} from 'react-native';
+import {View,Text,StyleSheet,TextInput,ScrollView,TouchableOpacity,} from 'react-native';
 
 import PIN from "./PIN";
 import RedeApoio from '../AreaApoio';

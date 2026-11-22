@@ -1,33 +1,26 @@
+import { CommonActions } from "@react-navigation/native";
 
 import React, { useEffect, useState } from "react";
 import {View,Text,ScrollView,Pressable,StyleSheet,} from "react-native";
 
 import { CORES } from "../../theme";
-import { API_URL } from "../../services/api";
+import api from "../../services/api";
+import { obterSessao } from "../../services/sessao";
 
 export default function Historico({ navigation }) {
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
-  const userIdTeste = 1;
-
+  // READ: histórico da usuária logada (GET /autoavaliacoes?user_id=)
   async function carregarAvaliacoes() {
     setCarregando(true);
     setErro("");
 
     try {
-      const resposta = await fetch(
-        `${API_URL}/autoavaliacoes?user_id=${userIdTeste}`
-      );
-
-      const dados = await resposta.json();
-
-      if (!resposta.ok) {
-        throw new Error(dados.erro || "Erro ao buscar avaliações.");
-      }
-
-      setAvaliacoes(dados);
+      const sessao = await obterSessao();
+      if (!sessao) throw new Error("Faça login novamente para ver o histórico.");
+      setAvaliacoes(await api.get(`/autoavaliacoes?user_id=${sessao.id}`));
     } catch (error) {
       setErro(error.message);
     } finally {
@@ -35,24 +28,16 @@ export default function Historico({ navigation }) {
     }
   }
 
+  // DELETE /autoavaliacoes/:id
   async function excluirAvaliacao(id) {
-        try {
-            const resposta = await fetch(
-            `${API_URL}/autoavaliacoes/${id}?user_id=${userIdTeste}`,
-            {
-                method: "DELETE",
-            }
-            );
-
-            if (!resposta.ok) {
-            throw new Error("Não foi possível excluir a avaliação.");
-            }
-
-            await carregarAvaliacoes();
-        } catch (erro) {
-            setErro(erro.message);
-        }
+    try {
+      const sessao = await obterSessao();
+      await api.delete(`/autoavaliacoes/${id}?user_id=${sessao?.id ?? ""}`);
+      await carregarAvaliacoes();
+    } catch (erro) {
+      setErro(erro.message);
     }
+  }
 
   useEffect(() => {
     carregarAvaliacoes();
@@ -60,6 +45,18 @@ export default function Historico({ navigation }) {
 
   return (
     <ScrollView style={styles.container}>
+      {/* Saída rápida: volta para a fachada (Biblioteca) */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Marcar página"
+        onPress={() => navigation.dispatch(
+          CommonActions.reset({ index: 0, routes: [{ name: "Biblioteca" }] })
+        )}
+        style={styles.botaoMarcaPagina}
+      >
+        <Text style={styles.textoMarcaPagina}>Marcar-página</Text>
+      </Pressable>
+
       <Text style={styles.titulo}>
         Histórico de autoavaliações
       </Text>
@@ -94,9 +91,7 @@ export default function Historico({ navigation }) {
           </Text>
 
           <Text>
-            Data: {new Date(
-              avaliacao.data_avaliacao
-            ).toLocaleDateString("pt-BR")}
+            Data: {String(avaliacao.data_avaliacao).slice(0, 10).split("-").reverse().join("/")}
           </Text>
 
           <Pressable
@@ -177,5 +172,18 @@ const styles = StyleSheet.create({
     textoExcluir: {
     color: CORES.branco,
     fontWeight: "700",
+  },
+  botaoMarcaPagina: {
+    alignSelf: "flex-end",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: CORES.laranja,
+    marginTop: 8,
+  },
+  textoMarcaPagina: {
+    color: CORES.texto,
+    fontWeight: "700",
+    fontSize: 12,
   },
 });

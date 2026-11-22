@@ -14,6 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { CORES } from "../../theme";
+import api from "../../services/api";
+import { criarSessao, encerrarSessao } from "../../services/sessao";
 
 const CHAVE_PERFIL = "@BookSpace: perfil";
 
@@ -90,6 +92,8 @@ export default function MeuPerfil({ navigation, route }) {
       CHAVE_PERFIL,
       JSON.stringify(novoPerfil)
     );
+      const sessao = await api.post("/perfil/login", novoPerfil);
+      await criarSessao(sessao);
 
     setPerfil(novoPerfil);
     setFormularioAberto(false);
@@ -111,6 +115,7 @@ function excluirPerfil() {
     async function confirmarExclusao(){
       try {
         await AsyncStorage.removeItem(CHAVE_PERFIL);
+        await encerrarSessao();
 
         setPerfil(null);
         setNome("");

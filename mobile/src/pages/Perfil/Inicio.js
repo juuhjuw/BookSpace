@@ -9,6 +9,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from "react";
 import { CORES } from "../../theme";
+import api from "../../services/api";
+import { criarSessao } from "../../services/sessao";
 
 const CHAVE_PERFIL = "@BookSpace: perfil";
 
@@ -39,27 +41,13 @@ export default function Inicio({ navigation }) {
       const dadosSalvos = await AsyncStorage.getItem(CHAVE_PERFIL);
       const emailDigitado = usuario.trim().toLowerCase();
 
-      if(!dadosSalvos){
-        const novoPerfil = {
-          email: emailDigitado,
-          pin,
-        };
-        await AsyncStorage.setItem(
-          CHAVE_PERFIL, JSON.stringify(novoPerfil)
-        );
-        setTipoMensagem("Sucesso");
-        setMensagem("Seu cadastro foi realizado com sucesso!!");
-        navigation?.navigate("Biblioteca");
-        return;
-      }
-
-      const perfil = JSON.parse(dadosSalvos);
-
-      if(perfil.email !== usuario.trim().toLowerCase() || perfil.pin !== pin){
-        setTipoMensagem("Erro");
-        setMensagem("E-mail ou PIN incorreto!!");
-        return;
-      }
+      const perfil = dadosSalvos ? JSON.parse(dadosSalvos) : { email: emailDigitado };
+      const sessao = await api.post("/perfil/login", {
+        nome: perfil.nome || "Usuária",
+        email: emailDigitado,
+        pin,
+      });
+      await criarSessao(sessao);
       setTipoMensagem("Sucesso");
       setMensagem("Login realizado com sucesso!!");
       navigation?.navigate("Biblioteca");

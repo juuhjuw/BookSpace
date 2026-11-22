@@ -1,3 +1,6 @@
+import { CommonActions } from "@react-navigation/native";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   Alert,
   Linking,
@@ -12,6 +15,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { CORES } from "../../theme";
+import api from "../../services/api";
+import { obterSessao } from "../../services/sessao";
 
 // Itens da lista da rede de apoio
 const OPCOES = [
@@ -31,7 +36,7 @@ const OPCOES = [
     id: "risco",
     titulo: "Autoavaliação de Risco",
     icone: "chart-box-outline",
-    rota: "Autoavaliação",
+    rota: "Autoavaliacao",
   },
   {
     id: "perfil",
@@ -94,6 +99,40 @@ function ItemMenu({ titulo, icone, onPress }) {
 }
 
 export default function AreaApoio({ navigation }) {
+  // resumo vem da API (quantidade de registros, contatos e último risco)
+  const [resumo, setResumo] = useState(null);
+  const [erroResumo, setErroResumo] = useState("");
+
+  useFocusEffect(
+    useCallback(() => {
+      let ativo = true;
+      (async () => {
+        try {
+          const sessao = await obterSessao();
+          if (!sessao) throw new Error("Sessão não encontrada.");
+          const dados = await api.get(`/usuarios/${sessao.id}/resumo`);
+          if (ativo) {
+            setResumo(dados);
+            setErroResumo("");
+          }
+        } catch (e) {
+          if (ativo) setErroResumo(e.message);
+        }
+      })();
+      return () => {
+        ativo = false;
+      };
+    }, [])
+  );
+
+  const textoResumo = resumo
+    ? `${resumo.registros_diario} registro(s) · ${resumo.contatos} contato(s) · ${
+        resumo.ultima_autoavaliacao
+          ? `último risco: ${resumo.ultima_autoavaliacao.nivel_risco.toLowerCase()}`
+          : "risco não informado"
+      }`
+    : erroResumo || "Carregando...";
+
   // Liga para o telefone do card
   async function ligar(numero) {
     const enderecoTelefone = `tel:${numero}`;
@@ -121,9 +160,12 @@ export default function AreaApoio({ navigation }) {
 
   // Retorna para a primeira tela da pilha de navegação.
   function sairRapido() {
-    if (navigation.canGoBack()) {
-      navigation.popToTop();
-    }
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "Biblioteca" }],
+      })
+    );
   }
 
   // Retorna apenas para a tela anterior caso exista
@@ -150,14 +192,12 @@ export default function AreaApoio({ navigation }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Sair rapidamente"
-            accessibilityHint="Retorna para a primeira tela do aplicativo"
-            accessibilityState={{ disabled: !existeTelaAnterior }}
-            disabled={!existeTelaAnterior}
-            onPress={sairRapido}
+            accessibilityHint="Retorna para a Biblioteca"
+                                    onPress={sairRapido}
             hitSlop={8}
             style={({ pressed }) => [
               styles.botaoSair,
-              !existeTelaAnterior && styles.botaoDesabilitado,
+              
               pressed && styles.pressionado,
             ]}
           >
@@ -192,13 +232,13 @@ export default function AreaApoio({ navigation }) {
         {/* Apresenta um resumo das informações registradas. */}
         <View
           accessible
-          accessibilityLabel="Resumo: zero registros, zero contatos e nenhum risco informado"
+          accessibilityLabel={`Resumo: ${textoResumo}`}
           style={styles.cartaoResumo}
         >
           <Text style={styles.tituloResumo}>Resumo</Text>
 
           <Text style={styles.textoResumo}>
-            0 registros · 0 contatos · risco não informado
+            {textoResumo}
           </Text>
         </View>
 
@@ -223,9 +263,7 @@ export default function AreaApoio({ navigation }) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Voltar"
-          accessibilityState={{ disabled: !existeTelaAnterior }}
-          disabled={!existeTelaAnterior}
-          onPress={voltar}
+                              onPress={voltar}
           style={({ pressed }) => [
             styles.botaoVoltar,
             !existeTelaAnterior && styles.botaoVoltarDesabilitado,

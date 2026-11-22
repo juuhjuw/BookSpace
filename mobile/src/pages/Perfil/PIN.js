@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -13,7 +14,7 @@ import {
 
 import { CORES } from "../../theme";
 
-const PIN_PADRAO = "1234";
+const CHAVE_PERFIL = "@BookSpace: perfil";
 
 export default function PIN({ navigation, onVoltar, onSucesso }) {
   const [pin, setPin] = useState("");
@@ -23,13 +24,16 @@ export default function PIN({ navigation, onVoltar, onSucesso }) {
     if (navigation?.goBack) navigation.goBack();
   };
 
-  const Entrar = () => {
+  const Entrar = async () => {
   if (pin.length !== 4) {
     Alert.alert("Atenção", "Digite os 4 números do PIN.");
     return;
   }
 
-  if (pin === PIN_PADRAO) {
+  const dados = await AsyncStorage.getItem(CHAVE_PERFIL);
+  const perfil = dados ? JSON.parse(dados) : null;
+
+  if (perfil?.pin === pin) {
     if (onSucesso) {
       onSucesso();
     } else if (navigation?.navigate) {

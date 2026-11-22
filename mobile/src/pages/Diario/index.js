@@ -1,53 +1,95 @@
-import React, {useState} from 'react';
+import { CommonActions } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState } from 'react';
 
-import{  Text, View, Alert, TouchableOpacity, TextInput, ScrollView } from 'react-native'
+import { Text, View, Alert, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Swipeable } from 'react-native-gesture-handler';
 import { CORES } from "../../theme";
-import { DADOS_DIARIO } from './dados';
-import { CATEGORIAS_FIXAS } from './dados';
 import { estilo } from './styles'
+import api from '../../services/api';
+import { obterSessao } from '../../services/sessao';
 
+
+function formatarData(valor) {
+  if (!valor) return '';
+  const [data, hora = ''] = String(valor).replace('T', ' ').split(' ');
+  const [ano, mes, dia] = data.split('-');
+  return `${dia}/${mes}/${ano} ${hora.slice(0, 5)}`.trim();
+}
 
 export default function TelaDiario ({ navigation }) {
-    const [relatos, setRelatos] = useState(DADOS_DIARIO)
+    const [usuaria, setUsuaria] = useState(null);
+    const [relatos, setRelatos] = useState([])
     const [categoria, setCategoria ] = useState('');
     const [descricao, setDescricao ] =useState('');
     const [idEditando, setIdEditando] = useState(null);
+    const [carregando, setCarregando] = useState(true);
+    const [salvando, setSalvando] = useState(false);
+    const [erro, setErro] = useState('');
 
-  function marcarPagina() {
-    if (navigation.canGoBack()) {
-      navigation.popToTop();
+  // READ: busca os relatos da usuária logada na API
+  const carregarRelatos = useCallback(async (user) => {
+    setCarregando(true);
+    setErro('');
+    try {
+      setRelatos(await api.get(`/diario?user_id=${user.id}`));
+    } catch (e) {
+      setErro(e.message);
+    } finally {
+      setCarregando(false);
     }
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const sessao = await obterSessao();
+      if (!sessao) {
+        setCarregando(false);
+        setErro('Faça login novamente para ver seus registros.');
+        return;
+      }
+      setUsuaria(sessao);
+      carregarRelatos(sessao);
+    })();
+  }, [carregarRelatos]);
+
+  // marca-página: volta pra biblioteca
+  function marcarPagina() {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "Biblioteca" }],
+      })
+    );
   }
 
-  const salvarRelato = () => {
-    if (!categoria || !descricao) return;
-
-    if (idEditando !== null) {
-      // Atualiza o relato existente
-      const relatosAtualizados = relatos.map((item) => {
-        if (item.id === idEditando) {
-          return { ...item, categoria, descricao };
-        }
-        return item;
-      });
-      setRelatos(relatosAtualizados);
-      setIdEditando(null);
-    } else {
-      // Cria um novo relato
-      const novoRelato = {
-        id: String(Date.now()),
-        categoria, 
-        descricao,
-        data_ocorrencia: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setRelatos([novoRelato, ...relatos]);
+  // CREATE / UPDATE
+  const salvarRelato = async () => {
+    if (!usuaria || salvando) return;
+    if (!categoria || !descricao.trim()) {
+      Alert.alert('Atenção', 'Escolha uma categoria e descreva o que aconteceu.');
+      return;
     }
 
-    setCategoria('');
-    setDescricao('');
+    setSalvando(true);
+    try {
+      if (idEditando !== null) {
+        // Atualiza o relato existente
+        await api.put(`/diario/${idEditando}?user_id=${usuaria.id}`, { categoria, descricao });
+        setIdEditando(null);
+      } else {
+        // Cria um novo relato (a data/hora é gerada automaticamente pelo banco)
+        await api.post('/diario', { user_id: usuaria.id, categoria, descricao });
+      }
+      setCategoria('');
+      setDescricao('');
+      await carregarRelatos(usuaria);
+    } catch (e) {
+      Alert.alert('Não foi possível salvar', e.message);
+    } finally {
+      setSalvando(false);
+    }
   };
 
   // Preenche os campos para editar
@@ -57,8 +99,18 @@ export default function TelaDiario ({ navigation }) {
     setDescricao(item.descricao);
   };
 
+  const cancelarEdicao = () => {
+    setIdEditando(null);
+    setCategoria('');
+    setDescricao('');
+  };
+
   //alerta de segurança
   const confirmarExclusao = (id) => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Tem certeza de que deseja excluir este item?')) excluirRelato(id);
+      return;
+    }
     Alert.alert(
       "Excluir Ocorrência",
       "Tem certeza de que deseja excluir este item? Esta ação não pode ser desfeita.",
@@ -73,9 +125,15 @@ export default function TelaDiario ({ navigation }) {
     );
   };
 
-  // Exclui o relato pelo id
-  const excluirRelato = (id) => {
-    setRelatos(relatos.filter((item) => item.id !== id));
+  // DELETE: exclui o relato pelo id
+  const excluirRelato = async (id) => {
+    try {
+      await api.delete(`/diario/${id}?user_id=${usuaria.id}`);
+      if (idEditando === id) cancelarEdicao();
+      await carregarRelatos(usuaria);
+    } catch (e) {
+      Alert.alert('Não foi possível excluir', e.message);
+    }
   };
 
   const renderLeftActions = (item) => {
@@ -113,7 +171,8 @@ return (
              
           </View>
           <TouchableOpacity style={estilo.botaoMarcaPagina} 
-           onPress={marcarPagina}>
+           onPress={marcarPagina}
+           accessibilityLabel="Marcar página">
             
              <View style={estilo.corteMarcaPagina} />
         </TouchableOpacity>
@@ -160,11 +219,17 @@ return (
           />
 
         {/* Botão de Salvar */}
-        <TouchableOpacity style={estilo.botaoSalvar} onPress={salvarRelato}>
+        <TouchableOpacity style={estilo.botaoSalvar} onPress={salvarRelato} disabled={salvando}>
             <Text style={estilo.textoBotaoSalvar}>
-              {idEditando !== null ? 'Salvar Alterações' : 'Salvar'}
+              {salvando ? 'Salvando...' : idEditando !== null ? 'Salvar Alterações' : 'Salvar'}
             </Text>
         </TouchableOpacity>
+
+        {idEditando !== null && (
+          <TouchableOpacity onPress={cancelarEdicao} style={{ marginTop: 10, alignItems: 'center' }}>
+            <Text style={{ color: CORES.roxo, fontWeight: '700' }}>Cancelar edição</Text>
+          </TouchableOpacity>
+        )}
 
         </View>
 
@@ -172,13 +237,30 @@ return (
                 <Text style={estilo.subtitulo}>Histórico de Ocorrências</Text>
             </View>
 
-        {/* Lista de Registros Salvos */}
+        {carregando && <ActivityIndicator color={CORES.roxo} style={{ marginVertical: 16 }} />}
+
+        {!carregando && erro !== '' && (
+          <View style={estilo.card}>
+            <Text style={{ color: CORES.vermelho }}>{erro}</Text>
+            {usuaria && (
+              <TouchableOpacity onPress={() => carregarRelatos(usuaria)}>
+                <Text style={{ color: CORES.roxo, fontWeight: '700', marginTop: 8 }}>Tentar novamente</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {!carregando && erro === '' && relatos.length === 0 && (
+          <Text style={{ color: CORES.textoSecundario, marginBottom: 16 }}>Nenhum registro ainda.</Text>
+        )}
+
+        {/* Lista de Registros Salvos (vindos da API) */}
         {relatos.map((item) => (
           <Swipeable
             key={item.id}
             renderLeftActions ={() => renderLeftActions(item)}
             renderRightActions={() => renderRightActions(item)}
-            onSwipeableOpen={(direction) => {
+            onSwipeableOpen={(direction, swipeable) => {
               if (direction === 'left') {
                 // Arrastou para a direita -> Editar
                 iniciarEdicao(item);
@@ -186,12 +268,13 @@ return (
                 // Arrastou para a esquerda -> Excluir
                 confirmarExclusao(item.id);
               }
+              swipeable?.close?.();
             }}
           >
           <View style={estilo.card}>
             <View style={estilo.cardHeaderInfo}>
               <Text style={estilo.cardTitulo}>{item.categoria}</Text>
-              <Text style={estilo.cardData}>{item.data_ocorrencia}</Text>
+              <Text style={estilo.cardData}>{formatarData(item.data_ocorrencia)}</Text>
             </View>
 
             <Text style={estilo.cardDescricao}>{item.descricao}</Text>
@@ -201,7 +284,7 @@ return (
 
 
         {/* Botão de Voltar */}
-        <TouchableOpacity style={estilo.botaoVoltar} onPress={() => navigation.navigate('AreaApoio')}>
+        <TouchableOpacity style={estilo.botaoVoltar} onPress={() => navigation.goBack()}>
           <MaterialCommunityIcons name="arrow-left" size={18} color={CORES.roxo} />
           <Text style={estilo.textoVoltar}>Voltar</Text>
         </TouchableOpacity>
@@ -210,4 +293,3 @@ return (
     </SafeAreaView>
   );
 }
-
