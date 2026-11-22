@@ -1,14 +1,6 @@
 import React, { useRef } from "react";
 
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-    Pressable 
-} from 'react-native';
+import {View,Text,StyleSheet,TextInput,ScrollView,TouchableOpacity,} from 'react-native';
 
 import { CORES } from "../../theme";
 

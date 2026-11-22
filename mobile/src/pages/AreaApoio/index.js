@@ -127,7 +127,7 @@ export default function AreaApoio({ navigation }) {
           "Ligação indisponível",
           "Este aparelho não conseguiu abrir o telefone.",
         );
-        return; 
+        return;
       }
 
       await Linking.openURL(enderecoTelefone);

@@ -1,7 +1,12 @@
 
+import { Platform } from "react-native";
 import { obterUsuarioAtual } from "./session";
 
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+const hostPadrao =
+  Platform.OS === "android" ? "10.0.2.2" : "localhost";
+
+export const API_URL =
+  process.env.EXPO_PUBLIC_API_URL || `http://${hostPadrao}:3000`;
 
 export async function requisitar(caminho, opcoes = {}) {
   const { exigirToken = true, ...opcoesFetch } = opcoes;
