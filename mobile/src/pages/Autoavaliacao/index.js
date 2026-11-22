@@ -1,13 +1,11 @@
 import { CommonActions } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
-import {Alert,Pressable,ScrollView,StyleSheet,Text,View,} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CORES } from "../../theme";
-import api from "../../services/api";
-import { obterSessao } from "../../services/sessao";
-
-
+import { requisitar } from "../../services/api";
+import { obterUsuarioAtual } from "../../services/session";
 
 const PERGUNTAS = [
   "Ameaça com arma de fogo ou faca?",
@@ -15,316 +13,170 @@ const PERGUNTAS = [
   "Agressões ficaram mais frequentes?",
 ];
 
-const PONTUACAO_TOTAL = 26;
-const PONTOS_POR_PERGUNTA = PONTUACAO_TOTAL / PERGUNTAS.length;
-
-export default function Autoavaliacao({ navigation }) {
+export default function Autoavaliacao({ navigation, route }) {
   const [marcadas, setMarcadas] = useState([false, false, false]);
+  const [usuario, setUsuario] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [mensagem, setMensagem] = useState("");
-  const [resultadoModelo, setResultadoModelo] = useState(null);
-  const [consultandoModelo, setConsultandoModelo] = useState(false);
-  const [erroModelo, setErroModelo] = useState("");
-  const [usuaria, setUsuaria] = useState(null);
+  const [erro, setErro] = useState("");
+  const [contexto, setContexto] = useState(null);
+  const [erroContexto, setErroContexto] = useState("");
+
+  const avaliacaoEditando = route.params?.avaliacao || null;
 
   useEffect(() => {
-    obterSessao().then(setUsuaria);
+    let ativo = true;
+    async function carregarDados() {
+      try {
+        const sessao = await obterUsuarioAtual();
+        if (!sessao) throw new Error("Entre novamente para salvar seus registros.");
+        if (ativo) setUsuario(sessao);
+      } catch (falha) {
+        if (ativo) setErro(falha.message);
+      }
+
+      try {
+        const dados = await requisitar("/modelo/contexto");
+        if (ativo) setContexto(dados);
+      } catch (falha) {
+        if (ativo) setErroContexto(falha.message);
+      }
+    }
+    carregarDados();
+    return () => { ativo = false; };
   }, []);
-  const quantidadeMarcadas = marcadas.filter(Boolean).length;
-  const pontuacao = ((quantidadeMarcadas * PONTUACAO_TOTAL) /PERGUNTAS.length).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
-  const pontosPorPergunta = PONTOS_POR_PERGUNTA.toLocaleString("pt-BR", {maximumFractionDigits: 2,});
-  const nivelRisco =quantidadeMarcadas === 0? "Baixo": quantidadeMarcadas === 1? "Moderado": "Alto";
-  const orientacao =
-    quantidadeMarcadas === 0? "Se precisar de orientação, ligue 180. Em perigo imediato, ligue 190."
-      : quantidadeMarcadas === 1? "Procure apoio e orientação pelo 180. Em perigo imediato, ligue 190."
-        : "Procure ajuda agora. Ligue 180 ou 190.";
 
-  function alternarPergunta(index) {
-    setMarcadas((atuais) =>
-      atuais.map((valor, i) => (i === index ? !valor : valor)),
-    );
-  }
-
-  
-  function montarRespostas() {
-    const respostas = {};
-    marcadas.forEach((marcada, index) => {
-      respostas[`pergunta${index + 1}`] = marcada;
-    });
-    return respostas;
-  }
-
-  // salva a autoavaliação
-  async function salvarAutoavaliacao() {
-
-    if (salvando) return;
-    if (!usuaria) {
-      setMensagem("Faça login novamente para salvar.");
+  useEffect(() => {
+    if (!avaliacaoEditando) {
+      setMarcadas([false, false, false]);
       return;
     }
+    const respostas = avaliacaoEditando.respostas || {};
+    setMarcadas(PERGUNTAS.map((_, index) => respostas[`pergunta${index + 1}`] === true));
+    setMensagem("");
+    setErro("");
+  }, [avaliacaoEditando]);
+
+  function alternarPergunta(index) {
+    setMarcadas((atuais) => atuais.map((valor, i) => (i === index ? !valor : valor)));
+  }
+
+  async function salvarAutoavaliacao() {
+    if (!usuario || salvando) return;
     setSalvando(true);
     setMensagem("");
-
+    setErro("");
     try {
-      await api.post("/autoavaliacoes", {
-        user_id: usuaria.id,
-        pontuacao_total: Math.round(
-          (quantidadeMarcadas * PONTUACAO_TOTAL) / PERGUNTAS.length
-        ),
-        nivel_risco: nivelRisco,
-        respostas: montarRespostas(),
-      });
-
-      setMensagem("Autoavaliação salva com sucesso!");
-    } catch (erro) {
-        setMensagem(`Erro ao salvar: ${erro.message}`);
+      const respostas = Object.fromEntries(
+        marcadas.map((marcada, index) => [`pergunta${index + 1}`, marcada]),
+      );
+      await requisitar(
+        avaliacaoEditando
+          ? `/autoavaliacoes/${avaliacaoEditando.id}`
+          : "/autoavaliacoes",
+        {
+          method: avaliacaoEditando ? "PUT" : "POST",
+          body: JSON.stringify({ user_id: usuario.id, respostas }),
+        },
+      );
+      setMensagem(avaliacaoEditando ? "Registro atualizado." : "Registro salvo.");
+      setMarcadas([false, false, false]);
+      navigation.setParams({ avaliacao: null });
+    } catch (falha) {
+      setErro(falha.message);
     } finally {
       setSalvando(false);
     }
   }
 
-  // chama o modelo de Data Science (usa as respostas + o diário da usuária)
-  async function consultarModelo() {
-    if (consultandoModelo) return;
-    if (!usuaria) {
-      setErroModelo("Faça login novamente para consultar.");
-      return;
-    }
-
-    setConsultandoModelo(true);
-    setErroModelo("");
-    setResultadoModelo(null);
-
-    try {
-      const dados = await api.post("/modelo/prever", {
-        user_id: usuaria.id,
-        respostas: montarRespostas(),
-      });
-      setResultadoModelo(dados);
-    } catch (erro) {
-      setErroModelo(erro.message);
-    } finally {
-      setConsultandoModelo(false);
-    }
-  }
-
   function marcarPagina() {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: "Biblioteca" }],
-      })
-    );
-  }
-
-  function voltar() {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      Alert.alert("Voltar", "Não há uma tela anterior disponível.");
-    }
+    navigation.dispatch(CommonActions.reset({
+      index: 0,
+      routes: [{ name: "Biblioteca" }],
+    }));
   }
 
   return (
     <SafeAreaView style={styles.areaSegura}>
-      <ScrollView
-        contentContainerStyle={styles.conteudo}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.conteudo}>
         <View style={styles.cabecalho}>
           <View style={styles.blocoTitulo}>
-            <Text accessibilityRole="header" style={styles.titulo}>
-              Autoavaliação de Risco
-            </Text>
+            <Text accessibilityRole="header" style={styles.titulo}>Registro de sinais</Text>
             <Text style={styles.subtitulo}>
-              Identifique sinais de risco e procure ajuda se precisar.
+              Anote respostas para seu próprio acompanhamento. Este formulário não calcula nem classifica risco.
             </Text>
           </View>
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Marcar página"
-            accessibilityHint="Retorna para a Biblioteca"
-            onPress={marcarPagina}
-            hitSlop={8}
-            style={({ pressed }) => [
-              styles.botaoMarcaPagina,
-              pressed && styles.pressionado,
-            ]}
-          >
+          <Pressable accessibilityRole="button" accessibilityLabel="Sair rapidamente para a biblioteca" onPress={marcarPagina} style={styles.botaoMarcaPagina}>
             <Text style={styles.textoMarcaPagina}>Marcar-página</Text>
-            <MaterialCommunityIcons
-              name="location-exit"
-              size={20}
-              color={CORES.texto}
-            />
+            <MaterialCommunityIcons name="location-exit" size={20} color={CORES.texto} />
           </Pressable>
         </View>
 
         <View style={styles.cartaoPerguntas}>
           <Text accessibilityRole="header" style={styles.tituloSecao}>
-            Sinais de alerta
+            {avaliacaoEditando ? "Editar respostas" : "Registro pessoal"}
           </Text>
-          <Text style={styles.instrucao}>
-            Marque os sinais que já aconteceram.
-          </Text>
-
+          <Text style={styles.instrucao}>Marque os sinais que já aconteceram.</Text>
           <View style={styles.listaPerguntas}>
             {PERGUNTAS.map((pergunta, index) => (
               <Pressable
                 key={pergunta}
-                style={({ pressed }) => [
-                  styles.itemPergunta,
-                  pressed && styles.pressionado,
-                ]}
+                style={styles.itemPergunta}
                 onPress={() => alternarPergunta(index)}
                 accessibilityRole="checkbox"
                 accessibilityLabel={pergunta}
-                accessibilityHint={`Vale ${pontosPorPergunta} pontos.`}
                 accessibilityState={{ checked: marcadas[index] }}
               >
                 <MaterialCommunityIcons
-                  name={
-                    marcadas[index]
-                      ? "checkbox-marked"
-                      : "checkbox-blank-outline"
-                  }
+                  name={marcadas[index] ? "checkbox-marked" : "checkbox-blank-outline"}
                   size={22}
                   color={marcadas[index] ? CORES.roxo : CORES.textoSecundario}
                 />
                 <Text style={styles.textoPergunta}>{pergunta}</Text>
-                <Text style={styles.pontosPergunta}>+{pontosPorPergunta}</Text>
               </Pressable>
             ))}
           </View>
+          <Text style={styles.instrucao}>
+            Em perigo imediato, ligue 190. Para orientação, ligue 180.
+          </Text>
         </View>
 
-        <View
-          accessible
-          accessibilityLabel={`Risco ${nivelRisco.toLowerCase()}. Pontuação ${pontuacao} de ${PONTUACAO_TOTAL}. ${orientacao}`}
-          style={styles.cartaoResultado}
-        >
-          <View style={styles.linhaResultado}>
-            <View
-              style={[
-                styles.seloRisco,
-                nivelRisco === "Baixo" && styles.seloRiscoBaixo,
-                nivelRisco === "Moderado" && styles.seloRiscoModerado,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.textoSelo,
-                  nivelRisco === "Moderado" && styles.textoSeloModerado,
-                ]}
-              >
-                Risco {nivelRisco.toLowerCase()}
-              </Text>
-            </View>
-            <Text style={styles.pontuacao}>
-              Pontuação {pontuacao}/{PONTUACAO_TOTAL}
-            </Text>
-          </View>
-
-          <Text style={styles.orientacao}>{orientacao}</Text>
-        </View>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Salvar autoavaliação"
-          onPress={salvarAutoavaliacao}
-          disabled={salvando}
-          style={({ pressed }) => [
-            styles.botaoSalvar,
-            pressed && styles.pressionado,
-          ]}
-        >
+        {!!erro && <Text accessibilityRole="alert" style={styles.erro}>{erro}</Text>}
+        {!!mensagem && <Text style={styles.mensagem}>{mensagem}</Text>}
+        <Pressable accessibilityRole="button" onPress={salvarAutoavaliacao} disabled={salvando} style={styles.botaoSalvar}>
           <Text style={styles.textoBotaoSalvar}>
-            {salvando ? "Salvando..." : "Salvar autoavaliação"}
+            {salvando ? "Salvando..." : avaliacaoEditando ? "Salvar alterações" : "Salvar registro"}
           </Text>
         </Pressable>
-
-        {mensagem !== "" && (
-          <Text style={{ textAlign: "center", color: CORES.roxo }}>
-            {mensagem}
-          </Text>
-        )}
-
-        <Pressable
-          onPress={() => navigation.navigate("Historico")}
-          style={styles.botaoVoltar}
-        >
-          <Text style={styles.textoBotaoVoltar}>
-            Ver histórico de autoavaliações
-          </Text>
+        <Pressable onPress={() => navigation.navigate("Historico")} style={styles.botaoVoltar}>
+          <Text style={styles.textoBotaoVoltar}>Ver registros salvos</Text>
         </Pressable>
 
         <View style={styles.cartaoPerguntas}>
-          <Text style={styles.tituloSecao}>
-            Organização do diário (Data Science)
-          </Text>
-
-          <Text style={styles.instrucao}>
-            Compara seus registros do diário e as respostas acima com
-            notificações públicas do SINAN 2024 para sugerir se vale
-            completar o histórico de episódios.
-          </Text>
-
-          <Pressable
-            style={styles.botaoSalvar}
-            onPress={consultarModelo}
-            disabled={consultandoModelo}
-          >
-            <Text style={styles.textoBotaoSalvar}>
-              {consultandoModelo
-                ? "Consultando modelo..."
-                : "Ver estimativa"}
-            </Text>
-          </Pressable>
-
-          {resultadoModelo !== null && (
-            <View style={styles.cartaoModelo}>
-              <Text style={styles.seloEstimativa}>ESTIMATIVA ACADÊMICA</Text>
-              <Text style={styles.faixaModelo}>
-                Semelhança {resultadoModelo.faixa.toLowerCase()} com registros recorrentes
-              </Text>
-              <Text style={styles.orientacao}>
-                {resultadoModelo.mensagem}
+          <Text style={styles.tituloSecao}>Contexto agregado do estudo acadêmico</Text>
+          {contexto ? (
+            <>
+              <Text style={styles.instrucao}>
+                {contexto.amostra.notificacoesComAlvoConhecido.toLocaleString("pt-BR")} notificações do SINAN 2024 com resposta conhecida; em {(
+                  contexto.amostra.proporcaoComRecorrenciaRegistrada * 100
+                ).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% já havia recorrência registrada.
               </Text>
               <Text style={styles.instrucao}>
-                Base: {resultadoModelo.origem?.categorias_diario?.length || 0} categoria(s) do seu diário
-                + suas respostas. Probabilidade estimada pelo modelo:{" "}
-                {Math.round(resultadoModelo.probabilidade * 100)}%.
+                Modelo demonstrativo: F1 médio {contexto.validacao.f1Medio.toLocaleString("pt-BR", { style: "percent", maximumFractionDigits: 1 })};
+                acurácia {contexto.validacao.acuraciaMedia.toLocaleString("pt-BR", { style: "percent", maximumFractionDigits: 1 })},
+                abaixo do baseline de {contexto.validacao.baselineAcuracia.toLocaleString("pt-BR", { style: "percent", maximumFractionDigits: 1 })}.
               </Text>
-              <Text style={styles.avisoModelo}>
-                ⚠️ {resultadoModelo.aviso}
-              </Text>
-            </View>
-          )}
-
-          {erroModelo !== "" && (
-            <Text style={styles.orientacao}>
-              Erro: {erroModelo}
+              <Text style={styles.aviso}>{contexto.aviso}</Text>
+            </>
+          ) : (
+            <Text style={styles.instrucao}>
+              {erroContexto || "Carregando resultados agregados..."}
             </Text>
           )}
         </View>
 
-        <View style={styles.espacador} />
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Voltar"
-          onPress={voltar}
-          style={({ pressed }) => [
-            styles.botaoVoltar,
-            pressed && styles.pressionado,
-          ]}
-        >
-          <MaterialCommunityIcons
-            name="arrow-left"
-            size={18}
-            color={CORES.roxo}
-          />
+        <Pressable onPress={() => navigation.goBack()} style={styles.botaoVoltar}>
+          <MaterialCommunityIcons name="arrow-left" size={18} color={CORES.roxo} />
           <Text style={styles.textoBotaoVoltar}>Voltar</Text>
         </Pressable>
       </ScrollView>
@@ -333,192 +185,25 @@ export default function Autoavaliacao({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  areaSegura: {
-    flex: 1,
-    backgroundColor: CORES.fundo,
-  },
-  conteudo: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 24,
-    gap: 18,
-  },
-  cabecalho: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  blocoTitulo: {
-    flex: 1,
-    gap: 6,
-  },
-  titulo: {
-    color: CORES.roxo,
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  subtitulo: {
-    color: CORES.textoSecundario,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  botaoMarcaPagina: {
-    minHeight: 48,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: CORES.laranja,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  textoMarcaPagina: {
-    color: CORES.texto,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  cartaoPerguntas: {
-    padding: 16,
-    borderWidth: 1,
-    borderColor: CORES.borda,
-    borderRadius: 16,
-    backgroundColor: CORES.branco,
-    gap: 12,
-  },
-  tituloSecao: {
-    color: CORES.texto,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  instrucao: {
-    color: CORES.textoSecundario,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  listaPerguntas: {
-    gap: 4,
-  },
-  itemPergunta: {
-    minHeight: 48,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  textoPergunta: {
-    flex: 1,
-    color: CORES.texto,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  pontosPergunta: {
-    color: CORES.textoSecundario,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  cartaoResultado: {
-    padding: 16,
-    borderWidth: 1,
-    borderColor: CORES.borda,
-    borderRadius: 16,
-    backgroundColor: CORES.branco,
-  },
-  linhaResultado: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 8,
-  },
-  seloRisco: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    backgroundColor: CORES.vermelho,
-  },
-  seloRiscoBaixo: {
-    backgroundColor: "#2E7D32",
-  },
-  seloRiscoModerado: {
-    backgroundColor: CORES.laranja,
-  },
-  textoSelo: {
-    color: CORES.branco,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  textoSeloModerado: {
-    color: CORES.texto,
-  },
-  pontuacao: {
-    color: CORES.textoSecundario,
-    fontSize: 13,
-  },
-  orientacao: {
-    color: CORES.texto,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  espacador: {
-    flex: 1,
-    minHeight: 4,
-  },
-  botaoVoltar: {
-    minHeight: 50,
-    borderWidth: 1,
-    borderColor: CORES.borda,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  textoBotaoVoltar: {
-    color: CORES.roxo,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  pressionado: {
-    opacity: 0.75,
-  },
-  botaoSalvar: {
-    minHeight: 50,
-    backgroundColor: CORES.roxo,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  textoBotaoSalvar: {
-    color: CORES.branco,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  cartaoModelo: {
-    marginTop: 12,
-    padding: 14,
-    borderRadius: 12,
-    backgroundColor: CORES.roxoClaro,
-    gap: 8,
-  },
-  seloEstimativa: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    backgroundColor: CORES.laranja,
-    color: CORES.texto,
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  faixaModelo: {
-    color: CORES.roxo,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  avisoModelo: {
-    color: CORES.textoSecundario,
-    fontSize: 12,
-    fontStyle: "italic",
-  },
+  areaSegura: { flex: 1, backgroundColor: CORES.fundo },
+  conteudo: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24, gap: 18 },
+  cabecalho: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
+  blocoTitulo: { flex: 1, gap: 6 },
+  titulo: { color: CORES.roxo, fontSize: 24, fontWeight: "700" },
+  subtitulo: { color: CORES.textoSecundario, fontSize: 13, lineHeight: 18 },
+  botaoMarcaPagina: { minHeight: 48, paddingHorizontal: 12, borderRadius: 12, backgroundColor: CORES.laranja, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  textoMarcaPagina: { color: CORES.texto, fontSize: 12, fontWeight: "700" },
+  cartaoPerguntas: { padding: 16, borderWidth: 1, borderColor: CORES.borda, borderRadius: 16, backgroundColor: CORES.branco, gap: 12 },
+  tituloSecao: { color: CORES.texto, fontSize: 16, fontWeight: "700" },
+  instrucao: { color: CORES.textoSecundario, fontSize: 13, lineHeight: 19 },
+  listaPerguntas: { gap: 4 },
+  itemPergunta: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 12 },
+  textoPergunta: { flex: 1, color: CORES.texto, fontSize: 14, lineHeight: 20 },
+  aviso: { color: CORES.texto, fontSize: 12, lineHeight: 17, fontWeight: "600" },
+  erro: { color: CORES.vermelho, textAlign: "center" },
+  mensagem: { color: CORES.roxo, textAlign: "center" },
+  botaoVoltar: { minHeight: 50, borderWidth: 1, borderColor: CORES.borda, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  textoBotaoVoltar: { color: CORES.roxo, fontSize: 14, fontWeight: "700" },
+  botaoSalvar: { minHeight: 50, backgroundColor: CORES.roxo, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  textoBotaoSalvar: { color: CORES.branco, fontSize: 14, fontWeight: "700" },
 });

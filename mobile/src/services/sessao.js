@@ -1,25 +1,24 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const CHAVE_SESSAO = "@BookSpace:sessao";
-const CHAVE_PERFIL = "@BookSpace: perfil";
+import {
+  limparUsuarioAtual,
+  obterUsuarioAtual,
+  salvarUsuarioAtual,
+} from "./session";
 
 export async function obterSessao() {
-  const dados = await AsyncStorage.getItem(CHAVE_SESSAO);
-  return dados ? JSON.parse(dados) : null;
+  return obterUsuarioAtual();
 }
 
 export async function criarSessao(perfil) {
-  await AsyncStorage.setItem(CHAVE_SESSAO, JSON.stringify(perfil));
-  await AsyncStorage.setItem(
-    CHAVE_PERFIL,
-    JSON.stringify({
-      nome: perfil.nome || "",
-      email: perfil.email,
-      pin: perfil.pin,
-    })
-  );
+  const usuario =
+    perfil?.usuario && typeof perfil.usuario === "object"
+      ? perfil.usuario
+      : perfil;
+  await salvarUsuarioAtual({
+    ...usuario,
+    ...(perfil?.token ? { token: perfil.token } : {}),
+  });
 }
 
 export async function encerrarSessao() {
-  await AsyncStorage.removeItem(CHAVE_SESSAO);
+  await limparUsuarioAtual();
 }

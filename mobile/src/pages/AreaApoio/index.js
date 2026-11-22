@@ -1,6 +1,4 @@
-import { CommonActions } from "@react-navigation/native";
-import { useCallback, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Linking,
@@ -11,14 +9,13 @@ import {
   View,
 } from "react-native";
 
-// tira o conteudo de tras do dinamique island
+import { CommonActions } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { CORES } from "../../theme";
-import api from "../../services/api";
-import { obterSessao } from "../../services/sessao";
+import { requisitar } from "../../services/api";
+import { obterUsuarioAtual } from "../../services/session";
 
-// Itens da lista da rede de apoio
 const OPCOES = [
   {
     id: "diario",
@@ -34,7 +31,7 @@ const OPCOES = [
   },
   {
     id: "risco",
-    titulo: "Autoavaliação de Risco",
+    titulo: "Registro de Sinais",
     icone: "chart-box-outline",
     rota: "Autoavaliacao",
   },
@@ -84,7 +81,7 @@ function ItemMenu({ titulo, icone, onPress }) {
   return (
     <Pressable
       accessible
-      accessibilityRole="text"
+      accessibilityRole="button"
       accessibilityLabel={titulo}
       onPress={onPress}
       style={({ pressed }) => [styles.itemMenu, pressed && styles.pressionado]}
@@ -99,41 +96,28 @@ function ItemMenu({ titulo, icone, onPress }) {
 }
 
 export default function AreaApoio({ navigation }) {
-  // resumo vem da API (quantidade de registros, contatos e último risco)
   const [resumo, setResumo] = useState(null);
   const [erroResumo, setErroResumo] = useState("");
 
-  useFocusEffect(
-    useCallback(() => {
-      let ativo = true;
-      (async () => {
-        try {
-          const sessao = await obterSessao();
-          if (!sessao) throw new Error("Sessão não encontrada.");
-          const dados = await api.get(`/usuarios/${sessao.id}/resumo`);
-          if (ativo) {
-            setResumo(dados);
-            setErroResumo("");
-          }
-        } catch (e) {
-          if (ativo) setErroResumo(e.message);
-        }
-      })();
-      return () => {
-        ativo = false;
-      };
-    }, [])
-  );
+  useEffect(() => {
+    let ativo = true;
+    async function carregarResumo() {
+      try {
+        const usuario = await obterUsuarioAtual();
+        if (!usuario) throw new Error("Entre para consultar seus registros.");
+        const [registros, contatos] = await Promise.all([
+          requisitar(`/diarios?user_id=${usuario.id}`),
+          requisitar(`/rede-apoio?user_id=${usuario.id}`),
+        ]);
+        if (ativo) setResumo({ registros: registros.length, contatos: contatos.length });
+      } catch (erro) {
+        if (ativo) setErroResumo(erro.message);
+      }
+    }
+    carregarResumo();
+    return () => { ativo = false; };
+  }, []);
 
-  const textoResumo = resumo
-    ? `${resumo.registros_diario} registro(s) · ${resumo.contatos} contato(s) · ${
-        resumo.ultima_autoavaliacao
-          ? `último risco: ${resumo.ultima_autoavaliacao.nivel_risco.toLowerCase()}`
-          : "risco não informado"
-      }`
-    : erroResumo || "Carregando...";
-
-  // Liga para o telefone do card
   async function ligar(numero) {
     const enderecoTelefone = `tel:${numero}`;
     try {
@@ -143,14 +127,11 @@ export default function AreaApoio({ navigation }) {
           "Ligação indisponível",
           "Este aparelho não conseguiu abrir o telefone.",
         );
-        return; // Faz a tentativa de ligar, se não, retorna o alerta
+        return;
       }
 
-      // Abre o aplicativo de telefone.
-      // A ligação não é iniciada automaticamente.
       await Linking.openURL(enderecoTelefone);
     } catch (erro) {
-      // Exibe uma mensagem caso ocorra algum problema inesperado.
       Alert.alert(
         "Não foi possível abrir o telefone",
         "Tente novamente ou digite o número manualmente.",
@@ -158,7 +139,6 @@ export default function AreaApoio({ navigation }) {
     }
   }
 
-  // Retorna para a primeira tela da pilha de navegação.
   function sairRapido() {
     navigation.dispatch(
       CommonActions.reset({
@@ -168,36 +148,29 @@ export default function AreaApoio({ navigation }) {
     );
   }
 
-  // Retorna apenas para a tela anterior caso exista
   function voltar() {
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
   }
-  const existeTelaAnterior = navigation.canGoBack(); // Verifica se existe tela anterior
-
   return (
-    // Mantem o conteudo fora da ilha dinamica
     <SafeAreaView style={styles.areaSegura}>
-      {/* Permite a rolagem quando o conteúdo não couber na altura da tela. */}
       <ScrollView
         contentContainerStyle={styles.conteudo}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Agrupa o título e o botão de saída rápida. */}
         <View style={styles.cabecalho}>
           <Text style={styles.titulo}>Área de apoio</Text>
 
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Sair rapidamente"
-            accessibilityHint="Retorna para a Biblioteca"
-                                    onPress={sairRapido}
+            accessibilityHint="Retorna para a biblioteca"
+            onPress={sairRapido}
             hitSlop={8}
             style={({ pressed }) => [
               styles.botaoSair,
-              
               pressed && styles.pressionado,
             ]}
           >
@@ -211,7 +184,6 @@ export default function AreaApoio({ navigation }) {
           </Pressable>
         </View>
 
-        {/* Agrupa os cartões dos serviços de emergência. */}
         <View style={styles.linhaEmergencia}>
           <CartaoEmergencia
             numero="180"
@@ -232,13 +204,17 @@ export default function AreaApoio({ navigation }) {
         {/* Apresenta um resumo das informações registradas. */}
         <View
           accessible
-          accessibilityLabel={`Resumo: ${textoResumo}`}
+          accessibilityLabel={resumo
+            ? `Resumo: ${resumo.registros} registros e ${resumo.contatos} contatos`
+            : "Resumo pessoal indisponível"}
           style={styles.cartaoResumo}
         >
-          <Text style={styles.tituloResumo}>Resumo</Text>
+          <Text style={styles.tituloResumo}>Seus registros</Text>
 
           <Text style={styles.textoResumo}>
-            {textoResumo}
+            {resumo
+              ? `${resumo.registros} registros · ${resumo.contatos} contatos`
+              : erroResumo || "Carregando..."}
           </Text>
         </View>
 
@@ -263,10 +239,9 @@ export default function AreaApoio({ navigation }) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Voltar"
-                              onPress={voltar}
+          onPress={voltar}
           style={({ pressed }) => [
             styles.botaoVoltar,
-            !existeTelaAnterior && styles.botaoVoltarDesabilitado,
             pressed && styles.pressionado,
           ]}
         >
@@ -330,11 +305,6 @@ const styles = StyleSheet.create({
     color: CORES.texto,
     fontSize: 14,
     fontWeight: "700",
-  },
-
-  // Aplica transparência aos elementos desabilitados.
-  botaoDesabilitado: {
-    opacity: 0.55,
   },
 
   // Organiza os dois cartões de emergência lado a lado.

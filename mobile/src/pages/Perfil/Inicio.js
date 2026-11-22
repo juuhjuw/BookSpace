@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,60 +6,64 @@ import {
   TouchableOpacity,
   TextInput,
 } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState } from "react";
 import { CORES } from "../../theme";
-import api from "../../services/api";
-import { criarSessao } from "../../services/sessao";
-
-const CHAVE_PERFIL = "@BookSpace: perfil";
+import { requisitar } from "../../services/api";
+import { salvarUsuarioAtual } from "../../services/session";
 
 //Armazenar os dados do usuário e do PIN
 export default function Inicio({ navigation }) {
   const [usuario, setUsuario] = useState("");
   const [pin, setPin] = useState("");
+  const [nome, setNome] = useState("");
+  const [criandoConta, setCriandoConta] = useState(false);
+  const [carregando, setCarregando] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("");
 
 
-  //Função ao clicar no botão de login
   const handleLogin = async () => {
-
+    if (carregando) return;
     if (!usuario.trim() || !pin.trim()) {
+      setTipoMensagem("erro");
       setMensagem("Por favor, preencha todos os campos.");
       return;
     }
 
-    //Validar o PIN (exemplo: deve ter 4 dígitos)
-    if (!/^\d{4}$/.test(pin)) { 
-      setTipoMensagem("erro"); 
+    if (!/^\d{4}$/.test(pin)) {
+      setTipoMensagem("erro");
       setMensagem("O PIN deve ter 4 dígitos numéricos.");
       return;
     }
 
-    try{
-      const dadosSalvos = await AsyncStorage.getItem(CHAVE_PERFIL);
-      const emailDigitado = usuario.trim().toLowerCase();
-
-      const perfil = dadosSalvos ? JSON.parse(dadosSalvos) : { email: emailDigitado };
-      const sessao = await api.post("/perfil/login", {
-        nome: perfil.nome || "Usuária",
-        email: emailDigitado,
-        pin,
-      });
-      await criarSessao(sessao);
-      setTipoMensagem("Sucesso");
-      setMensagem("Login realizado com sucesso!!");
-      navigation?.navigate("Biblioteca");
-    }catch{
-      setTipoMensagem("Erro");
-      setMensagem("Não foi possível concluir o salvamento do perfil!");
+    if (criandoConta && !nome.trim()) {
+      setTipoMensagem("erro");
+      setMensagem("Informe seu nome para criar o perfil.");
+      return;
     }
 
-    console.log("Dados do login:", { usuario, pin });
-    setTipoMensagem("sucesso");
-    setMensagem("Login realizado com sucesso!");
-    navigation?.navigate("Biblioteca");
+    setCarregando(true);
+    try {
+      const emailDigitado = usuario.trim().toLowerCase();
+      const perfil = await requisitar(
+        criandoConta ? "/usuarios" : "/usuarios/login",
+        {
+          method: "POST",
+          exigirToken: false,
+          body: JSON.stringify(
+            criandoConta
+              ? { nome: nome.trim(), email: emailDigitado, pin }
+              : { email: emailDigitado, pin },
+          ),
+        },
+      );
+      await salvarUsuarioAtual({ ...perfil.usuario, token: perfil.token });
+      navigation.reset({ index: 0, routes: [{ name: "Biblioteca" }] });
+    } catch (erro) {
+      setTipoMensagem("erro");
+      setMensagem(erro.message || "Não foi possível concluir a operação.");
+    } finally {
+      setCarregando(false);
+    }
   };
 
   return (
@@ -67,7 +71,9 @@ export default function Inicio({ navigation }) {
       <Text style={estilo.tituloPag}>BookSpace</Text>
 
       <View style={estilo.centro}>
-        <Text style={estilo.subtitulo}>Bem-Vinda</Text>
+        <Text style={estilo.subtitulo}>
+          {criandoConta ? "Criar perfil" : "Bem-vinda"}
+        </Text>
 
         <Text style={estilo.recado}>
           Seu espaço seguro para ler, explorar e se fortalecer
@@ -75,7 +81,7 @@ export default function Inicio({ navigation }) {
 
         <TextInput
           style={estilo.input}
-          placeholder="Email ou usuária"
+          placeholder="E-mail"
           placeholderTextColor={CORES.itemDesabilitado}
           value={usuario}
           onChangeText={(valor) => {
@@ -84,6 +90,16 @@ export default function Inicio({ navigation }) {
                   }}
           autoCapitalize="none"
         />
+        {criandoConta && (
+          <TextInput
+            style={estilo.input}
+            placeholder="Nome"
+            placeholderTextColor={CORES.itemDesabilitado}
+            value={nome}
+            onChangeText={setNome}
+            autoCapitalize="words"
+          />
+        )}
         <TextInput
           style={estilo.input}
           placeholder="PIN"
@@ -112,11 +128,25 @@ export default function Inicio({ navigation }) {
           </Text>
         )}
 
-        <TouchableOpacity style={estilo.botao} onPress={handleLogin}>
+        <TouchableOpacity
+          style={estilo.botao}
+          onPress={handleLogin}
+          disabled={carregando}
+        >
           <Text
             style={{ color: CORES.branco, fontSize: 18, fontWeight: "bold" }}
           >
-            Entrar
+            {carregando ? "Aguarde..." : criandoConta ? "Criar perfil" : "Entrar"}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setCriandoConta((atual) => !atual);
+            setMensagem("");
+          }}
+        >
+          <Text style={estilo.alternarConta}>
+            {criandoConta ? "Já tenho perfil: entrar" : "Criar novo perfil"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -172,6 +202,12 @@ const estilo = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 5,
+  },
+  alternarConta: {
+    color: CORES.roxo,
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 16,
   },
   input: {
     width: "100%",

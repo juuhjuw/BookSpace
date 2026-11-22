@@ -1,189 +1,132 @@
 import { CommonActions } from "@react-navigation/native";
-
 import React, { useEffect, useState } from "react";
-import {View,Text,ScrollView,Pressable,StyleSheet,} from "react-native";
-
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { CORES } from "../../theme";
-import api from "../../services/api";
-import { obterSessao } from "../../services/sessao";
+import { requisitar } from "../../services/api";
+import { obterUsuarioAtual } from "../../services/session";
+
+const PERGUNTAS = [
+  "Ameaça com arma de fogo ou faca?",
+  "Enforcamento ou estrangulamento?",
+  "Agressões ficaram mais frequentes?",
+];
 
 export default function Historico({ navigation }) {
   const [avaliacoes, setAvaliacoes] = useState([]);
+  const [userId, setUserId] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
-  // READ: histórico da usuária logada (GET /autoavaliacoes?user_id=)
   async function carregarAvaliacoes() {
     setCarregando(true);
     setErro("");
-
     try {
-      const sessao = await obterSessao();
-      if (!sessao) throw new Error("Faça login novamente para ver o histórico.");
-      setAvaliacoes(await api.get(`/autoavaliacoes?user_id=${sessao.id}`));
-    } catch (error) {
-      setErro(error.message);
+      const sessao = await obterUsuarioAtual();
+      if (!sessao) throw new Error("Entre novamente para acessar seus registros.");
+      setUserId(sessao.id);
+      setAvaliacoes(await requisitar(`/autoavaliacoes?user_id=${sessao.id}`));
+    } catch (falha) {
+      setErro(falha.message);
     } finally {
       setCarregando(false);
     }
   }
 
-  // DELETE /autoavaliacoes/:id
+  useEffect(() => { carregarAvaliacoes(); }, []);
+
+  function marcarPagina() {
+    navigation.dispatch(CommonActions.reset({
+      index: 0,
+      routes: [{ name: "Biblioteca" }],
+    }));
+  }
+
   async function excluirAvaliacao(id) {
     try {
-      const sessao = await obterSessao();
-      await api.delete(`/autoavaliacoes/${id}?user_id=${sessao?.id ?? ""}`);
-      await carregarAvaliacoes();
-    } catch (erro) {
-      setErro(erro.message);
+      await requisitar(`/autoavaliacoes/${id}?user_id=${userId}`, { method: "DELETE" });
+      setAvaliacoes((atuais) => atuais.filter((item) => item.id !== id));
+    } catch (falha) {
+      setErro(falha.message);
     }
   }
 
-  useEffect(() => {
-    carregarAvaliacoes();
-  }, []);
+  function confirmarExclusao(id) {
+    if (Platform.OS === "web") {
+      if (window.confirm("Excluir este registro?")) excluirAvaliacao(id);
+      return;
+    }
+    Alert.alert("Excluir registro", "Deseja excluir este item?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Excluir", style: "destructive", onPress: () => excluirAvaliacao(id) },
+    ]);
+  }
+
+  function resumoRespostas(respostas) {
+    if (!respostas) return "Respostas indisponíveis.";
+    const marcadas = PERGUNTAS.filter((_, indice) => respostas[`pergunta${indice + 1}`]);
+    return marcadas.length
+      ? marcadas.join(" · ")
+      : "Nenhum sinal foi marcado neste registro.";
+  }
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Saída rápida: volta para a fachada (Biblioteca) */}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Marcar página"
-        onPress={() => navigation.dispatch(
-          CommonActions.reset({ index: 0, routes: [{ name: "Biblioteca" }] })
-        )}
-        style={styles.botaoMarcaPagina}
-      >
-        <Text style={styles.textoMarcaPagina}>Marcar-página</Text>
-      </Pressable>
-
-      <Text style={styles.titulo}>
-        Histórico de autoavaliações
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.titulo}>Registros salvos</Text>
+      <Text style={styles.subtitulo}>
+        Suas respostas pessoais não são convertidas em pontuação ou classificação de risco.
       </Text>
 
-      <Pressable
-        style={styles.botaoAtualizar}
-        onPress={carregarAvaliacoes}
-      >
-        <Text style={styles.textoBotao}>Atualizar histórico</Text>
+      <Pressable style={styles.botaoMarcaPagina} onPress={marcarPagina} accessibilityRole="button">
+        <Text style={styles.textoMarcaPagina}>Marcar-página · Biblioteca</Text>
+      </Pressable>
+      <Pressable style={styles.botaoAtualizar} onPress={carregarAvaliacoes} disabled={carregando}>
+        <Text style={styles.textoBotao}>{carregando ? "Carregando..." : "Atualizar registros"}</Text>
       </Pressable>
 
-      {carregando && <Text>Carregando...</Text>}
-
-      {!!erro && <Text style={styles.erro}>{erro}</Text>}
-
+      {!!erro && <Text accessibilityRole="alert" style={styles.erro}>{erro}</Text>}
       {!carregando && !erro && avaliacoes.length === 0 && (
-        <Text>Nenhuma autoavaliação encontrada.</Text>
+        <Text style={styles.subtitulo}>Nenhum registro salvo.</Text>
       )}
-
       {avaliacoes.map((avaliacao) => (
         <View key={avaliacao.id} style={styles.cartao}>
           <Text style={styles.nome}>
-            Avaliação #{avaliacao.id}
+            Registro #{avaliacao.id} · {new Date(avaliacao.data_avaliacao).toLocaleDateString("pt-BR")}
           </Text>
-
-          <Text>
-            Pontuação: {avaliacao.pontuacao_total}/26
-          </Text>
-
-          <Text>
-            Nível: {avaliacao.nivel_risco}
-          </Text>
-
-          <Text>
-            Data: {String(avaliacao.data_avaliacao).slice(0, 10).split("-").reverse().join("/")}
-          </Text>
-
-          <Pressable
-            style={styles.botaoExcluir}
-            onPress={() => excluirAvaliacao(avaliacao.id)}
-          >
-            <Text style={styles.textoExcluir}>Excluir avaliação</Text>
-          </Pressable>
+          <Text style={styles.respostas}>{resumoRespostas(avaliacao.respostas)}</Text>
+          <View style={styles.acoes}>
+            <Pressable
+              onPress={() => navigation.navigate("Autoavaliacao", { avaliacao })}
+              accessibilityRole="button"
+            >
+              <Text style={styles.textoAcao}>Editar</Text>
+            </Pressable>
+            <Pressable onPress={() => confirmarExclusao(avaliacao.id)} accessibilityRole="button">
+              <Text style={styles.textoExcluir}>Excluir</Text>
+            </Pressable>
+          </View>
         </View>
       ))}
-
-      <Pressable
-        style={styles.botaoVoltar}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={styles.textoVoltar}>Voltar</Text>
+      <Pressable style={styles.botaoVoltar} onPress={() => navigation.goBack()}>
+        <Text style={styles.textoAcao}>Voltar</Text>
       </Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: CORES.fundo,
-    padding: 20,
-  },
-  titulo: {
-    color: CORES.roxo,
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 20,
-  },
-  botaoAtualizar: {
-    backgroundColor: CORES.roxo,
-    padding: 14,
-    borderRadius: 10,
-    marginBottom: 20,
-    alignItems: "center",
-  },
-  textoBotao: {
-    color: CORES.branco,
-    fontWeight: "700",
-  },
-  cartao: {
-    backgroundColor: CORES.branco,
-    borderColor: CORES.borda,
-    borderWidth: 1,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    gap: 8,
-  },
-  nome: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: CORES.roxo,
-  },
-  erro: {
-    color: CORES.vermelho,
-    marginBottom: 12,
-  },
-  botaoVoltar: {
-    padding: 14,
-    alignItems: "center",
-  },
-  textoVoltar: {
-    color: CORES.roxo,
-    fontWeight: "700",
-  },
-  botaoExcluir: {
-    backgroundColor: CORES.vermelho,
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 10,
-    alignItems: "center",
-  },
-    textoExcluir: {
-    color: CORES.branco,
-    fontWeight: "700",
-  },
-  botaoMarcaPagina: {
-    alignSelf: "flex-end",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: CORES.laranja,
-    marginTop: 8,
-  },
-  textoMarcaPagina: {
-    color: CORES.texto,
-    fontWeight: "700",
-    fontSize: 12,
-  },
+  container: { flexGrow: 1, backgroundColor: CORES.fundo, padding: 20, gap: 14 },
+  titulo: { color: CORES.roxo, fontSize: 22, fontWeight: "700" },
+  subtitulo: { color: CORES.textoSecundario, fontSize: 13, lineHeight: 19 },
+  botaoAtualizar: { backgroundColor: CORES.roxo, padding: 14, borderRadius: 10, alignItems: "center" },
+  textoBotao: { color: CORES.branco, fontWeight: "700" },
+  cartao: { backgroundColor: CORES.branco, borderColor: CORES.borda, borderWidth: 1, padding: 16, borderRadius: 12, gap: 8 },
+  nome: { fontSize: 16, fontWeight: "700", color: CORES.roxo },
+  respostas: { color: CORES.texto, fontSize: 14, lineHeight: 20 },
+  erro: { color: CORES.vermelho },
+  acoes: { flexDirection: "row", gap: 20, marginTop: 6 },
+  textoAcao: { color: CORES.roxo, fontWeight: "700" },
+  textoExcluir: { color: CORES.vermelho, fontWeight: "700" },
+  botaoVoltar: { padding: 14, alignItems: "center" },
+  botaoMarcaPagina: { backgroundColor: CORES.laranja, padding: 14, borderRadius: 10, alignItems: "center" },
+  textoMarcaPagina: { color: CORES.texto, fontWeight: "700" },
 });

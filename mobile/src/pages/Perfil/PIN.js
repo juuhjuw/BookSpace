@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -7,43 +6,49 @@ import {
   Pressable,
   StyleSheet,
   SafeAreaView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-
+import { requisitar } from "../../services/api";
+import { obterUsuarioAtual, salvarUsuarioAtual } from "../../services/session";
 import { CORES } from "../../theme";
 
-const CHAVE_PERFIL = "@BookSpace: perfil";
-
-export default function PIN({ navigation, onVoltar, onSucesso }) {
+export default function PIN({ navigation }) {
   const [pin, setPin] = useState("");
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState("");
 
   const BotVoltar = () => {
-    if (onVoltar) return onVoltar();
-    if (navigation?.goBack) navigation.goBack();
+    navigation.goBack();
   };
 
   const Entrar = async () => {
-  if (pin.length !== 4) {
-    Alert.alert("Atenção", "Digite os 4 números do PIN.");
-    return;
-  }
-
-  const dados = await AsyncStorage.getItem(CHAVE_PERFIL);
-  const perfil = dados ? JSON.parse(dados) : null;
-
-  if (perfil?.pin === pin) {
-    if (onSucesso) {
-      onSucesso();
-    } else if (navigation?.navigate) {
-      navigation.navigate("Notas");
+    if (pin.length !== 4) {
+      setErro("Digite os quatro números do PIN.");
+      return;
     }
-  } else {
-    Alert.alert("PIN incorreto", "Confira o código e tente novamente.");
-    setPin("");
-  }
-};
+
+    if (carregando) return;
+    setCarregando(true);
+    setErro("");
+    try {
+      const perfil = await obterUsuarioAtual();
+      if (!perfil) throw new Error("Entre novamente para confirmar o PIN.");
+      const resultado = await requisitar("/usuarios/login", {
+        method: "POST",
+        body: JSON.stringify({ email: perfil.email, pin }),
+        exigirToken: false,
+      });
+      await salvarUsuarioAtual({ ...resultado.usuario, token: resultado.token });
+      setPin("");
+      navigation.replace("AreaApoio");
+    } catch (falha) {
+      setErro(falha.message);
+      setPin("");
+    } finally {
+      setCarregando(false);
+    }
+  };
 
   return (
     <SafeAreaView style={estilo.safe}>
@@ -82,6 +87,7 @@ export default function PIN({ navigation, onVoltar, onSucesso }) {
               textAlign="center"
               onSubmitEditing={Entrar}
             />
+            {!!erro && <Text style={estilo.erro} accessibilityRole="alert">{erro}</Text>}
 
             <Pressable
               onPress={Entrar}
@@ -90,7 +96,9 @@ export default function PIN({ navigation, onVoltar, onSucesso }) {
                 pressed && estilo.pressed,
               ]}
             >
-              <Text style={estilo.btnEntrarText}>Entrar</Text>
+              <Text style={estilo.btnEntrarText}>
+                {carregando ? "Verificando..." : "Entrar"}
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -175,6 +183,11 @@ const estilo = StyleSheet.create({
   btnEntrarText: {
     color: CORES.branco,
     fontSize: 14,
+  },
+  erro: {
+    color: CORES.vermelho,
+    textAlign: "center",
+    marginBottom: 12,
   },
   pressed: {
     opacity: 0.8,

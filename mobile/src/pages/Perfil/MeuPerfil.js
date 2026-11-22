@@ -1,495 +1,232 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Pressable,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  Platform,
 } from "react-native";
+import { CommonActions } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { CORES } from "../../theme";
-import api from "../../services/api";
-import { criarSessao, encerrarSessao } from "../../services/sessao";
+import { requisitar } from "../../services/api";
+import { limparUsuarioAtual, obterUsuarioAtual, salvarUsuarioAtual } from "../../services/session";
 
-const CHAVE_PERFIL = "@BookSpace: perfil";
-
-export default function MeuPerfil({ navigation, route }) {
-
-  const [perfil, setPerfil] = useState(null);
-
+export default function MeuPerfil({ navigation }) {
+  const [usuario, setUsuario] = useState(null);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [pin, setPin] = useState("");
-
-  const [formularioAberto, setFormularioAberto] = useState(false);
   const [editando, setEditando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
 
   useEffect(() => {
-    async function carregarPerfil(){
-      try{
-        const dadosSalvos = await AsyncStorage.getItem(CHAVE_PERFIL);
-
-        if(dadosSalvos){
-          const dados = JSON.parse(dadosSalvos);
-
-          setPerfil({
-            nome: dados.nome || "",
-            email: dados.email || "",
-            pin: dados.pin || "",
-          });
-        }
-      }catch (erro){
-        console.log("Erro ao carregar o Perfil: ", erro)
+    let ativo = true;
+    async function carregarPerfil() {
+      try {
+        const sessao = await obterUsuarioAtual();
+        if (!sessao) throw new Error("Entre novamente para acessar seu perfil.");
+        const perfil = await requisitar(`/usuarios/${sessao.id}`);
+        if (!ativo) return;
+        setUsuario({ ...perfil, token: sessao.token });
+        setNome(perfil.nome);
+        setEmail(perfil.email);
+      } catch (falha) {
+        if (ativo) setErro(falha.message);
+      } finally {
+        if (ativo) setCarregando(false);
       }
     }
     carregarPerfil();
+    return () => { ativo = false; };
   }, []);
 
-  function abrirCadastro() {
-    setNome("");
-    setEmail("");
-    setPin("");
-    setEditando(false);
-    setFormularioAberto(true);
-  }
-
-  function abrirEdicao() {
-    setNome(perfil.nome);
-    setEmail(perfil.email);
-    setPin(perfil.pin);
-    setEditando(true);
-    setFormularioAberto(true);
+  function sairRapido() {
+    navigation.dispatch(CommonActions.reset({
+      index: 0,
+      routes: [{ name: "Biblioteca" }],
+    }));
   }
 
   async function salvarPerfil() {
-    if(!nome.trim() || !email.trim() || !pin.trim()){
-      Alert.alert("Atenção", "Preencha todos os campos.");
-      return;
-    }  
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      Alert.alert("Atenção", "Digite um e-mail válido.");
+    if (!nome.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setErro("Informe seu nome e um e-mail válido.");
       return;
     }
-    if (!/^\d{4}$/.test(pin)) {
-      Alert.alert("Atenção", "O PIN deve ter exatamente 4 números.");
+    if (pin && !/^\d{4}$/.test(pin)) {
+      setErro("O novo PIN deve conter quatro números.");
       return;
     }
 
-    const novoPerfil = {
-      nome: nome.trim(),
-       email: email.trim().toLowerCase(),
-       pin,
-     };
-
+    setSalvando(true);
+    setErro("");
     try {
-      await AsyncStorage.setItem(
-      CHAVE_PERFIL,
-      JSON.stringify(novoPerfil)
-    );
-      const sessao = await api.post("/perfil/login", novoPerfil);
-      await criarSessao(sessao);
-
-    setPerfil(novoPerfil);
-    setFormularioAberto(false);
-    setEditando(false);
-
-    Alert.alert(
-      "Sucesso",
-      editando
-        ? "Perfil atualizado com sucesso!"
-        : "Perfil adicionado com sucesso!"
-    );
-  } catch (erro) {
-    console.log("Erro ao salvar perfil:", erro);
-    Alert.alert("Erro", "Não foi possível salvar o perfil.");
+      const resposta = await requisitar(`/usuarios/${usuario.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          nome: nome.trim(),
+          email: email.trim().toLowerCase(),
+          ...(pin ? { pin } : {}),
+        }),
+      });
+      const atualizado = { ...usuario, ...resposta };
+      setUsuario(atualizado);
+      await salvarUsuarioAtual(atualizado);
+      setPin("");
+      setEditando(false);
+    } catch (falha) {
+      setErro(falha.message);
+    } finally {
+      setSalvando(false);
     }
   }
 
-function excluirPerfil() {
-    async function confirmarExclusao(){
+  function excluirPerfil() {
+    async function confirmar() {
       try {
-        await AsyncStorage.removeItem(CHAVE_PERFIL);
-        await encerrarSessao();
-
-        setPerfil(null);
-        setNome("");
-        setEmail("");
-        setPin("");
-        setFormularioAberto(false);
-        setEditando(false);
-
-        navigation.reset({
+        await requisitar(`/usuarios/${usuario.id}`, { method: "DELETE" });
+        await limparUsuarioAtual();
+        navigation.dispatch(CommonActions.reset({
           index: 0,
-          routes: [{ name: "Inicio"}],
-        });
-
-        Alert.alert("Sucesso", "Perfil foi excluído com sucesso!");
-      }catch (erro){
-        console.log("Erro ao excluir o perfil: ", erro);
-        Alert.alert("Erro", "Não foi possível concluir a exclusão do perfil!");
+          routes: [{ name: "Inicio" }],
+        }));
+      } catch (falha) {
+        setErro(falha.message);
       }
     }
-    if(Platform.OS === "web"){
-      const confirmacao = window.confirm(
-        "Tem certeza que deseja excluir seu perfil?"
-      );
-      if(confirmacao){
-        confirmarExclusao();
+
+    async function sair() {
+      await limparUsuarioAtual();
+      navigation.dispatch(CommonActions.reset({
+        index: 0,
+        routes: [{ name: "Inicio" }],
+      }));
+    }
+
+    if (Platform.OS === "web") {
+      if (window.confirm("Isso também excluirá os registros associados. Deseja continuar?")) {
+        confirmar();
       }
       return;
     }
-    Alert.alert(
-      "Excluir perfil",
-      "Tem certeza que deseja excluir seu perfil?",
-      [{
-        text: "Cancelar",
-        style: "cancel",
-      },
-      {
-        text: "Excluir",
-        style: "destructive",
-        onPress: confirmarExclusao,
-      },]
-    );
-  }
 
-  function cancelarFormulario() {
-    setFormularioAberto(false);
-    setEditando(false);
-    setNome("");
-    setEmail("");
-    setPin("");
+    Alert.alert("Excluir perfil", "Isso também excluirá os registros associados. Deseja continuar?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Excluir", style: "destructive", onPress: confirmar },
+    ]);
   }
-  
-  const BotVoltar = () => {
-    if (navigation?.canGoBack()) {
-      navigation.goBack();
-    }
-  };
 
   return (
-    <SafeAreaView style={estilos.container}>
-      <ScrollView
-        contentContainerStyle={estilos.conteudo}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-          <Pressable
-               onPress={BotVoltar}
-               style={({ pressed }) => [
-                 estilos.btnVoltar,
-                 pressed && estilos.pressed,
-               ]}
-             >
-               <Text style={estilos.btnVoltarText}>← Voltar</Text>
-             </Pressable>
-
-        <View style={estilos.cabecalho}>
-          <View style={estilos.avatar}>
-            <MaterialCommunityIcons
-              name="account-cog-outline"
-              size={42}
-              color={CORES.roxo}
-            />
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
+        <Pressable onPress={sairRapido} style={styles.voltar}>
+          <Text style={styles.textoVoltar}>Marcar-página · Biblioteca</Text>
+        </Pressable>
+        <View style={styles.cabecalho}>
+          <View style={styles.avatar}>
+            <MaterialCommunityIcons name="account-cog-outline" size={42} color={CORES.roxo} />
           </View>
-
-          <Text style={estilos.titulo}>Perfil e PIN</Text>
-          <Text style={estilos.subtitulo}>
-            Gerencie suas informações pessoais.
-          </Text>
+          <Text style={styles.titulo}>Perfil e PIN</Text>
+          <Text style={styles.subtitulo}>Gerencie suas informações pessoais.</Text>
         </View>
 
-        {/* READ: visualizar o perfil */}
-        {!formularioAberto && perfil && (
-          <View style={estilos.cartao}>
-            <Text style={estilos.tituloCartao}>Meu perfil</Text>
+        {carregando ? <Text style={styles.subtitulo}>Carregando perfil...</Text> : null}
+        {!!erro && <Text accessibilityRole="alert" style={styles.erro}>{erro}</Text>}
 
-            <Text style={estilos.rotulo}>Nome</Text>
-            <Text style={estilos.valor}>{perfil.nome}</Text>
-
-            <Text style={estilos.rotulo}>E-mail</Text>
-            <Text style={estilos.valor}>{perfil.email}</Text>
-
-            <Text style={estilos.rotulo}>PIN</Text>
-            <Text style={estilos.valor}>{"•".repeat(perfil.pin.length)}</Text>
-
-            <Pressable
-              style={estilos.botao}
-              onPress={abrirEdicao}
-            >
-              <MaterialCommunityIcons
-                name="pencil-outline"
-                size={20}
-                color={CORES.branco}
+        {!carregando && usuario && (
+          <View style={styles.cartao}>
+            <Text style={styles.tituloCartao}>{editando ? "Editar perfil" : "Meu perfil"}</Text>
+            <Text style={styles.rotulo}>Nome</Text>
+            {editando ? (
+              <TextInput style={styles.input} value={nome} onChangeText={setNome} />
+            ) : <Text style={styles.valor}>{usuario.nome}</Text>}
+            <Text style={styles.rotulo}>E-mail</Text>
+            {editando ? (
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
               />
-              <Text style={estilos.textoBotao}>Editar perfil</Text>
-            </Pressable>
-
+            ) : <Text style={styles.valor}>{usuario.email}</Text>}
+            {editando && (
+              <>
+                <Text style={styles.rotulo}>Novo PIN (opcional)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={pin}
+                  onChangeText={(valor) => setPin(valor.replace(/\D/g, "").slice(0, 4))}
+                  keyboardType="number-pad"
+                  secureTextEntry
+                  maxLength={4}
+                  placeholder="Deixe vazio para manter"
+                />
+              </>
+            )}
             <Pressable
-              style={estilos.botaoExcluir}
-              onPress={() => excluirPerfil()}
+              style={styles.botao}
+              onPress={editando ? salvarPerfil : () => setEditando(true)}
+              disabled={salvando}
             >
-              <MaterialCommunityIcons
-                name="trash-can-outline"
-                size={20}
-                color="#B42318"
-              />
-              <Text style={estilos.textoExcluir}>Excluir perfil</Text>
-            </Pressable>
-          </View>
-        )}
-
-
-        {!formularioAberto && !perfil && (
-          <View style={estilos.cartaoVazio}>
-            <MaterialCommunityIcons
-              name="account-plus-outline"
-              size={48}
-              color={CORES.roxo}
-            />
-
-            <Text style={estilos.tituloCartao}>
-              Nenhum perfil cadastrado
-            </Text>
-
-            <Text style={estilos.subtitulo}>
-              Adicione suas informações para começar.
-            </Text>
-
-            <Pressable
-              style={estilos.botao}
-              onPress={abrirCadastro}
-            >
-              <MaterialCommunityIcons
-                name="plus"
-                size={21}
-                color={CORES.branco}
-              />
-              <Text style={estilos.textoBotao}>Adicionar perfil</Text>
-            </Pressable>
-          </View>
-        )}
-
-        {formularioAberto && (
-          <View style={estilos.cartao}>
-            <Text style={estilos.tituloCartao}>
-              {editando ? "Editar perfil" : "Adicionar perfil"}
-            </Text>
-
-            <Text style={estilos.rotulo}>Nome</Text>
-            <TextInput
-              style={estilos.input}
-              placeholder="Digite seu nome"
-              placeholderTextColor="#92899A"
-              value={nome}
-              onChangeText={setNome}
-              autoCapitalize="words"
-            />
-
-            <Text style={estilos.rotulo}>E-mail</Text>
-            <TextInput
-              style={estilos.input}
-              placeholder="Digite seu e-mail"
-              placeholderTextColor="#92899A"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <Text style={estilos.rotulo}>PIN de 4 números</Text>
-            <TextInput
-              style={estilos.input}
-              placeholder="Digite seu PIN"
-              placeholderTextColor="#92899A"
-              value={pin}
-              onChangeText={(valor) =>
-                setPin(valor.replace(/\D/g, "").slice(0, 4))
-              }
-              keyboardType="number-pad"
-              secureTextEntry
-              maxLength={4}
-            />
-
-            <Pressable
-              style={estilos.botao}
-              onPress={salvarPerfil}
-            >
-              <MaterialCommunityIcons
-                name="content-save-outline"
-                size={20}
-                color={CORES.branco}
-              />
-              <Text style={estilos.textoBotao}>
-                {editando ? "Salvar alterações" : "Cadastrar perfil"}
+              <Text style={styles.textoBotao}>
+                {salvando ? "Salvando..." : editando ? "Salvar alterações" : "Editar perfil"}
               </Text>
             </Pressable>
-
-            <Pressable
-              style={estilos.botaoCancelar}
-              onPress={cancelarFormulario}
-            >
-              <Text style={estilos.textoCancelar}>Cancelar</Text>
-            </Pressable>
+            {editando ? (
+              <Pressable style={styles.botaoCancelar} onPress={() => {
+                setNome(usuario.nome);
+                setEmail(usuario.email);
+                setPin("");
+                setEditando(false);
+                setErro("");
+              }}>
+                <Text style={styles.textoVoltar}>Cancelar</Text>
+              </Pressable>
+            ) : (
+              <>
+                <Pressable style={styles.botaoCancelar} onPress={sair}>
+                  <Text style={styles.textoVoltar}>Sair deste perfil</Text>
+                </Pressable>
+                <Pressable style={styles.botaoExcluir} onPress={excluirPerfil}>
+                  <Text style={styles.textoExcluir}>Excluir perfil e registros</Text>
+                </Pressable>
+              </>
+            )}
           </View>
         )}
       </ScrollView>
     </SafeAreaView>
-    );
-  }
+  );
+}
 
-const estilos = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: CORES.fundo,
-  },
-  conteudo: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 24,
-  },
-  voltar: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    paddingVertical: 10,
-  },
-  textoVoltar: {
-    color: CORES.roxo,
-    fontSize: 15,
-  },
-  cabecalho: {
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 25,
-  },
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: CORES.fundo },
+  conteudo: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 },
+  voltar: { alignSelf: "flex-start", paddingVertical: 10 },
+  textoVoltar: { color: CORES.roxo, fontSize: 14, fontWeight: "600" },
+  cabecalho: { alignItems: "center", marginTop: 18, marginBottom: 24 },
   avatar: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    backgroundColor: "#E8DDF8",
-    alignItems: "center",
-    justifyContent: "center",
+    width: 82, height: 82, borderRadius: 41, backgroundColor: "#E8DDF8",
+    alignItems: "center", justifyContent: "center",
   },
-  titulo: {
-    color: CORES.roxo,
-    fontSize: 25,
-    fontWeight: "700",
-    marginTop: 12,
-  },
-  subtitulo: {
-    color: CORES.textoSecundario,
-    textAlign: "center",
-    fontSize: 13,
-    marginTop: 6,
-  },
-  cartao: {
-    backgroundColor: CORES.branco,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: CORES.borda,
-    padding: 18,
-  },
-  cartaoVazio: {
-    backgroundColor: CORES.branco,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: CORES.borda,
-    padding: 24,
-    alignItems: "center",
-  },
-  tituloCartao: {
-    color: CORES.roxo,
-    fontSize: 19,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-  rotulo: {
-    color: CORES.texto,
-    fontSize: 13,
-    fontWeight: "600",
-    marginTop: 14,
-    marginBottom: 6,
-  },
-  valor: {
-    color: CORES.texto,
-    fontSize: 15,
-  },
-  input: {
-    backgroundColor: CORES.fundo,
-    borderWidth: 1,
-    borderColor: CORES.borda,
-    borderRadius: 9,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: CORES.texto,
-  },
-  botao: {
-    backgroundColor: CORES.roxo,
-    borderRadius: 10,
-    minHeight: 48,
-    padding: 12,
-    marginTop: 22,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 8,
-  },
-  textoBotao: {
-    color: CORES.branco,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  botaoExcluir: {
-    borderWidth: 1,
-    borderColor: "#B42318",
-    borderRadius: 10,
-    minHeight: 48,
-    padding: 12,
-    marginTop: 10,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 8,
-  },
-  textoExcluir: {
-    color: "#B42318",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  botaoCancelar: {
-    padding: 14,
-    alignItems: "center",
-    marginTop: 5,
-  },
-  textoCancelar: {
-    color: CORES.textoSecundario,
-    fontSize: 14,
-  },
-   btnVoltarText: {
-    color: CORES.roxo,
-    fontSize: 14,
-  },
-    pressed: {
-    opacity: 0.8,
-  },
-  btnVoltar: {
-    alignSelf: "flex-start",
-    backgroundColor: CORES.fundo,
-    borderWidth: 1,
-    borderColor: CORES.borda,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginBottom: 32,
-  },
+  titulo: { color: CORES.roxo, fontSize: 25, fontWeight: "700", marginTop: 12 },
+  subtitulo: { color: CORES.textoSecundario, textAlign: "center", fontSize: 13, marginTop: 6 },
+  cartao: { backgroundColor: CORES.branco, borderRadius: 14, borderWidth: 1, borderColor: CORES.borda, padding: 18 },
+  tituloCartao: { color: CORES.roxo, fontSize: 19, fontWeight: "700", marginBottom: 12 },
+  rotulo: { color: CORES.texto, fontSize: 13, fontWeight: "600", marginTop: 14, marginBottom: 6 },
+  valor: { color: CORES.texto, fontSize: 15 },
+  input: { backgroundColor: CORES.fundo, borderWidth: 1, borderColor: CORES.borda, borderRadius: 9, paddingHorizontal: 12, paddingVertical: 12, fontSize: 15, color: CORES.texto },
+  botao: { backgroundColor: CORES.roxo, borderRadius: 10, minHeight: 48, padding: 12, marginTop: 22, alignItems: "center", justifyContent: "center" },
+  textoBotao: { color: CORES.branco, fontSize: 14, fontWeight: "700" },
+  botaoCancelar: { padding: 14, alignItems: "center", marginTop: 5 },
+  botaoExcluir: { borderWidth: 1, borderColor: CORES.vermelho, borderRadius: 10, minHeight: 48, padding: 12, marginTop: 10, alignItems: "center", justifyContent: "center" },
+  textoExcluir: { color: CORES.vermelho, fontWeight: "700", fontSize: 14 },
+  erro: { color: CORES.vermelho, textAlign: "center", marginBottom: 12 },
 });
-

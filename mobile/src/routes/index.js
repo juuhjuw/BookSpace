@@ -8,8 +8,8 @@ import Autoavaliacao from "../pages/Autoavaliacao";
 import TelaDiario from "../pages/Diario/index";
 import Biblioteca from "../pages/Perfil/Biblioteca";
 import Inicio from "../pages/Perfil/Inicio";
-import { CORES } from "../theme";
 import Historico from "../pages/Autoavaliacao/Historico";
+import { CORES } from "../theme";
 
 const Stack = createNativeStackNavigator();
 
@@ -21,20 +21,21 @@ export default function Routes() {
         headerShown: false,
         animation: "slide_from_right",
         contentStyle: {
-        backgroundColor: CORES.fundo,
+          backgroundColor: CORES.fundo,
         },
       }}
     >
-      <Stack.Screen name="Perfil" component={Perfil} />
+      <Stack.Screen name="Inicio" component={Inicio} />
+      <Stack.Screen name="Biblioteca" component={Biblioteca} />
       <Stack.Screen name="PIN" component={PIN} />
       <Stack.Screen name="AreaApoio" component={AreaApoio} />
+
       <Stack.Screen name="RedeApoio" component={RedeApoio} />
       <Stack.Screen name="Diario" component={TelaDiario} />
       <Stack.Screen name="Autoavaliacao" component={Autoavaliacao} />
-      <Stack.Screen name="Biblioteca" component={Biblioteca} />
-      <Stack.Screen name="Inicio" component={Inicio} />
       <Stack.Screen name="Historico" component={Historico} />
 
+      <Stack.Screen name="Perfil" component={Perfil} />
     </Stack.Navigator>
   );
 }

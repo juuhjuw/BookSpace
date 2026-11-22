@@ -6,7 +6,7 @@ Usar IA é permitido, desde que seja documentado e que quem usou entenda o que f
 
 - Todo código ou texto gerado com IA é lido, testado e entendido por quem o usou.
 - A IA não gera dados fictícios apresentados como reais, nem conteúdo sensacionalista.
-- Nenhum dado real de vítimas é usado. Tudo é fictício.
+- Os perfis e registros inseridos no app para demonstração são fictícios. O estudo de Data Science usa uma base pública e anonimizada do SINAN, descrita em `data/README.md`.
 - Registramos aqui cada uso relevante.
 
 ## Ferramentas usadas
@@ -16,6 +16,7 @@ Usar IA é permitido, desde que seja documentado e que quem usou entenda o que f
 | **Claude**  | Auxílio na montagem e estruturação da documentação e no desenvolvimento da API/Backend.                             |
 | **ChatGPT** | Compreensão de conceitos teóricos, estruturação do pipeline e suporte no desenvolvimento do modelo de Data Science. |
 | **Gemini**  | Definição das descrições detalhadas dos cards do Trello para guiar as tarefas do grupo.                             |
+| **Copilot** | Auditoria técnica da entrega, implementação dos CRUDs REST e integração mobile, revisão de documentação e exibição de métricas agregadas do modelo. |
 
 ## Registro de usos
 
@@ -33,3 +34,5 @@ Usar IA é permitido, desde que seja documentado e que quem usou entenda o que f
 | 23/10/2026| Ana Julia Prado   | Claude | notebook.ipynb | Verifique se nosso notebook condiz com o esperado do projeto, caso precise de ajustes justifique | Conferimos os itens obrigatórios do documento da entrega (diagnóstico nas 5 dimensões, tratamento documentado e EDA) |
 | 24/10/2026| Ana Julia Prado   | Claude | notebook.ipynb | Estilize nossos comentários em Markdown | Ajustamos a formatação visual e a clareza das explicações para deixar o notebook bem estruturado e profissional |
 | 24/10/2026| Ana Julia Prado   | Claude | notebook.ipynb | Ajuste nosso notebook para o modelo que o professor enviou, não altere os códigos, se precisar de mais informações notifique | Organizamos a estrutura conforme o template oficial, preservando integralmente os blocos de código existentes |
+| 19/11/2026| Ana Julia Fernandes | ChatGPT | notebook.ipynb e estruturas de BackEnd de Autoavaliação | Auxílio no desenvolvimento do CRUD da Autoavaliação, integração com a API e banco de dados, treinamento e integração do modelo de Data Science | Revisei o código, realizei testes das operações do CRUD e verifiquei a comunicação entre o aplicativo, a API e o modelo de classificação.
+| 20/11/2026 | Equipe BookSpace | Copilot | API, mobile, README.md, data/README.md e USO_IA.md | Auditoria dos requisitos finais; CRUDs REST e integração mobile; autenticação local; substituição de inferência individual por contexto agregado; instruções de execução | Executamos os testes HTTP de contrato e o bundle web Expo; revisamos que o app exibe somente resultados agregados. A equipe ainda deve validar no MySQL local e em aparelho/emulador antes da apresentação. |

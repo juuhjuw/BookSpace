@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS `User` (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nome VARCHAR(100) NOT NULL,
   email VARCHAR(150) NOT NULL UNIQUE,
-  senha VARCHAR(255) NOT NULL,          
-  pin_seguranca VARCHAR(255) NOT NULL,  
+  senha VARCHAR(255) NULL,
+  pin_seguranca VARCHAR(255) NOT NULL,
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -33,9 +33,7 @@ CREATE TABLE IF NOT EXISTS Rede_Apoio (
 CREATE TABLE IF NOT EXISTS Autoavaliacao (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
-  pontuacao_total INT,
-  nivel_risco VARCHAR(20),
-  respostas_json TEXT,
+  respostas_json TEXT NOT NULL,
   data_avaliacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES `User`(id) ON DELETE CASCADE
 );

@@ -1,33 +1,12 @@
-import React, { useState } from "react";
+import React, { useRef } from "react";
 
 import {View,Text,StyleSheet,TextInput,ScrollView,TouchableOpacity,} from 'react-native';
 
-import PIN from "./PIN";
-import RedeApoio from '../AreaApoio';
 import { CORES } from "../../theme";
 
 export default function Biblioteca({ navigation }) {
 
-    const [mostrarPIN, setMostrarPIN] = useState(false);
-    const [acessoLiberado, setAcessoLiberado] = useState(false);
-
-    if (mostrarPIN && !acessoLiberado) {
-        return (
-            <PIN
-                navigation={navigation}
-                onVoltar={() => setMostrarPIN(false)}
-                onSucesso={() => {
-                setAcessoLiberado(true);
-                setMostrarPIN(false);
-                  }}
-            />
-        );
-    }
-    if (acessoLiberado) {
-        navigation.navigate("AreaApoio");
-        setAcessoLiberado(false);
-        return null;
-    }
+  const pesquisaRef = useRef(null);
     
   return (
     <View style={estilo.container}>
@@ -42,6 +21,7 @@ export default function Biblioteca({ navigation }) {
         </View>
 
         <TextInput
+          ref={pesquisaRef}
           style={estilo.pesquisa}
           placeholder="Buscar títulos, autores..."
           placeholderTextColor="#777"
@@ -313,10 +293,11 @@ export default function Biblioteca({ navigation }) {
         </View>
          <View style={estilo.livroContainer}>
 
-        <TouchableOpacity
-            style={[estilo.capa, estilo.roxo]}
-            onLongPress={() => setMostrarPIN(true)}
-        >
+            <TouchableOpacity
+              style={[estilo.capa, estilo.roxo]}
+              onLongPress={() => navigation.navigate("PIN")}
+              delayLongPress={800}
+            >
             <Text style={estilo.genero}>
               ROMANCE
             </Text>
@@ -454,7 +435,7 @@ export default function Biblioteca({ navigation }) {
 
         <TouchableOpacity
           style={estilo.menuItem}
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate("Biblioteca")}
         >
           <Text>🏠</Text>
           <Text style={estilo.menuTexto}>
@@ -464,7 +445,7 @@ export default function Biblioteca({ navigation }) {
 
         <TouchableOpacity
           style={estilo.menuItem}
-          onPress={() => navigation.navigate('Buscar')}
+          onPress={() => pesquisaRef.current?.focus()}
         >
           <Text>🔍</Text>
           <Text style={estilo.menuTexto}>
